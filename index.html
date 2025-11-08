@@ -84,15 +84,25 @@
 </style>
 </head>
 <body>
-  <!-- Header: logo, site title, ethics banner, top controls -->
+ 
+    <!-- Header: logo, site title, ethics banner, top controls -->
   <header role="banner" aria-label="SACHIDAX header">
-   <div class="logo-row">
-  <div class="logo-placeholder">
-    <img src="assets/logo.png" alt="SACHIDAX Logo" />
-  </div>
-  <div class="brand">SACHIDAX</div>
-  <div class="ethics">Ethical use only — Do not use for unauthorized access.</div>
-</div>
+    <div class="logo-row">
+      <div class="logo-placeholder" id="logo" aria-hidden="true">
+      <img src="assets/logo.png" alt="SACHIDAX Logo" />
+
+        <!-- inline SVG square logo placeholder -->
+        <svg viewBox="0 0 100 100" aria-hidden="true">
+          <rect x="10" y="10" width="80" height="80" rx="12" fill="white" opacity="0.12"/>
+          <path d="M30 65 L50 35 L70 65 Z" fill="white" opacity="0.85"/>
+        </svg>
+      </div>
+      <div>
+        <div class="brand">SACHIDAX</div>
+        <div style="font-size:11px;color:#9bb6c9;margin-top:2px">Cybersecurity TreeMap</div>
+      </div>
+      <div class="ethics" role="note" aria-live="polite">Ethical use only — Do not use for unauthorized access.</div>
+    </div>
 
     <div class="toolbar" role="toolbar" aria-label="Top controls">
       <input id="search" class="search" placeholder="Search roles, tools, commands..." aria-label="Search nodes" />

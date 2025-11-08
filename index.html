@@ -26,12 +26,61 @@
   header{
     position:fixed;top:0;left:0;right:0;height:68px;display:flex;align-items:center;gap:16px;padding:12px 20px;background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
     border-bottom:1px solid var(--glass-border);backdrop-filter: blur(6px);z-index:50;box-shadow:var(--shadow)
-  }
-  .logo-row{display:flex;align-items:center;gap:12px}
-  .logo-placeholder{width:44px;height:44px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0ea5e9,#7c3aed);box-shadow:0 6px 18px rgba(124,58,237,0.2)}
-  .logo-placeholder svg{width:28px;height:28px;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.3))}
-  .brand{font-weight:700;font-size:18px;color:white;letter-spacing:0.6px}
-  .ethics{margin-left:18px;padding:6px 10px;border-radius:999px;background:linear-gradient(90deg,#ef4444,#f97316);color:white;font-weight:600;font-size:12px;box-shadow:0 6px 14px rgba(249,115,22,0.12)}
+  }.logo-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Modern gradient background behind the logo image */
+.logo-placeholder {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: linear-gradient(135deg, #0ea5e9, #7c3aed);
+  box-shadow: 0 6px 18px rgba(124, 58, 237, 0.2);
+}
+
+/* New rule for the image */
+.logo-placeholder img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;   /* ensures image scales nicely without distortion */
+  border-radius: 8px;
+  display: block;
+}
+
+/* Remove or comment out this old rule (it was for the SVG) */
+/* .logo-placeholder svg {
+  width: 28px;
+  height: 28px;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.3));
+} */
+
+.brand {
+  font-weight: 700;
+  font-size: 18px;
+  color: white;
+  letter-spacing: 0.6px;
+}
+
+.ethics {
+  margin-left: 18px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #ef4444, #f97316);
+  color: white;
+  font-weight: 600;
+  font-size: 12px;
+  box-shadow: 0 6px 14px rgba(249, 115, 22, 0.12);
+}
+
+/* Toolbar */
+
   /* Toolbar */
   .toolbar{margin-left:auto;display:flex;gap:8px;align-items:center}
   .btn{background:var(--glass);border:1px solid var(--glass-border);color:var(--muted);padding:8px 12px;border-radius:10px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
@@ -84,35 +133,31 @@
 </style>
 </head>
 <body>
- 
-    <!-- Header: logo, site title, ethics banner, top controls -->
-  <header role="banner" aria-label="SACHIDAX header">
-    <div class="logo-row">
-      <div class="logo-placeholder" id="logo" aria-hidden="true">
+<!-- Header: logo, site title, ethics banner, top controls -->
+<header role="banner" aria-label="SACHIDAX header">
+  <div class="logo-row">
+    <div class="logo-placeholder" id="logo" aria-hidden="true">
       <img src="assets/logo.png" alt="SACHIDAX Logo" />
-
-        <!-- inline SVG square logo placeholder -->
-        <svg viewBox="0 0 100 100" aria-hidden="true">
-          <rect x="10" y="10" width="80" height="80" rx="12" fill="white" opacity="0.12"/>
-          <path d="M30 65 L50 35 L70 65 Z" fill="white" opacity="0.85"/>
-        </svg>
-      </div>
-      <div>
-        <div class="brand">SACHIDAX</div>
-        <div style="font-size:11px;color:#9bb6c9;margin-top:2px">Cybersecurity TreeMap</div>
-      </div>
-      <div class="ethics" role="note" aria-live="polite">Ethical use only — Do not use for unauthorized access.</div>
     </div>
-
-    <div class="toolbar" role="toolbar" aria-label="Top controls">
-      <input id="search" class="search" placeholder="Search roles, tools, commands..." aria-label="Search nodes" />
-      <select id="roleFilter" aria-label="Filter by role">
-        <option value="all">Filter: All roles</option>
-      </select>
-      <button id="exportBtn" class="btn" title="Export visible subtree as JSON">Export JSON</button>
-      <button id="helpBtn" class="help-btn" aria-haspopup="dialog" aria-controls="helpModal">Help</button>
+    <div>
+      <div class="brand">SACHIDAX</div>
+      <div style="font-size:11px;color:#9bb6c9;margin-top:2px">Cybersecurity TreeMap</div>
     </div>
-  </header>
+    <div class="ethics" role="note" aria-live="polite">
+      Ethical use only — Do not use for unauthorized access.
+    </div>
+  </div>
+
+  <div class="toolbar" role="toolbar" aria-label="Top controls">
+    <input id="search" class="search" placeholder="Search roles, tools, commands..." aria-label="Search nodes" />
+    <select id="roleFilter" aria-label="Filter by role">
+      <option value="all">Filter: All roles</option>
+    </select>
+    <button id="exportBtn" class="btn" title="Export visible subtree as JSON">Export JSON</button>
+    <button id="helpBtn" class="help-btn" aria-haspopup="dialog" aria-controls="helpModal">Help</button>
+  </div>
+</header>
+
 
   <main>
     <!-- Visualization area -->

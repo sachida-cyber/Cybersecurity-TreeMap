@@ -1,0 +1,1759 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>SACHIDAX — Cybersecurity TreeMap</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='16' fill='%230047a1'/%3E%3Ctext x='50' y='57' font-size='42' text-anchor='middle' fill='white' font-family='Arial'%3ES%3C/text%3E%3C/svg%3E" />
+<style>
+  /* --------------------------
+     Base / Layout
+     --------------------------*/
+  :root{
+    --bg1: linear-gradient(135deg,#0f172a 0%, #0b1220 40%, #071229 100%);
+    --card: rgba(255,255,255,0.04);
+    --glass: rgba(255,255,255,0.03);
+    --accent: #6EE7B7;
+    --muted: rgba(255,255,255,0.7);
+    --glass-border: rgba(255,255,255,0.06);
+    --shadow: 0 8px 24px rgba(2,6,23,0.6);
+    --radius: 12px;
+    --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  }
+  html,body{height:100%;margin:0;font-family:var(--font-sans);color:var(--muted);background:var(--bg1);}
+  *{box-sizing:border-box}
+  /* Header */
+  header{
+    position:fixed;top:0;left:0;right:0;height:68px;display:flex;align-items:center;gap:16px;padding:12px 20px;background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
+    border-bottom:1px solid var(--glass-border);backdrop-filter: blur(6px);z-index:50;box-shadow:var(--shadow)
+  }
+  .logo-row{display:flex;align-items:center;gap:12px}
+  .logo-placeholder{width:44px;height:44px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0ea5e9,#7c3aed);box-shadow:0 6px 18px rgba(124,58,237,0.2)}
+  .logo-placeholder svg{width:28px;height:28px;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.3))}
+  .brand{font-weight:700;font-size:18px;color:white;letter-spacing:0.6px}
+  .ethics{margin-left:18px;padding:6px 10px;border-radius:999px;background:linear-gradient(90deg,#ef4444,#f97316);color:white;font-weight:600;font-size:12px;box-shadow:0 6px 14px rgba(249,115,22,0.12)}
+  /* Toolbar */
+  .toolbar{margin-left:auto;display:flex;gap:8px;align-items:center}
+  .btn{background:var(--glass);border:1px solid var(--glass-border);color:var(--muted);padding:8px 12px;border-radius:10px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+  .btn:focus{outline:3px solid rgba(110,231,183,0.12)}
+  input.search{min-width:200px;padding:8px 12px;border-radius:10px;border:1px solid var(--glass-border);background:transparent;color:var(--muted)}
+  select{padding:8px 10px;border-radius:8px;border:1px solid var(--glass-border);background:transparent;color:var(--muted)}
+
+  /* Main layout */
+  main{padding-top:84px;height:calc(100vh - 84px);display:flex;gap:12px;padding:20px}
+  .vis-wrap{flex:1;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:14px;padding:16px;border:1px solid var(--glass-border);box-shadow:var(--shadow);position:relative;display:flex;flex-direction:column;overflow:hidden}
+  /* legend & controls */
+  .topcontrols{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+  .legend{position:absolute;top:18px;right:18px;background:rgba(255,255,255,0.03);padding:10px;border-radius:10px;border:1px solid var(--glass-border);font-size:13px;display:flex;gap:10px;align-items:center}
+  .legend-item{display:flex;align-items:center;gap:8px}
+  .legend-swatch{width:14px;height:14px;border-radius:4px;box-shadow:0 2px 6px rgba(0,0,0,0.4)}
+
+  /* svg area */
+  svg{width:100%;height:100%;overflow:visible;display:block}
+  .node{cursor:pointer}
+  .node rect{rx:8;fill:var(--card);stroke:rgba(255,255,255,0.04)}
+  .node .label{font-size:12px;fill:white;pointer-events:none}
+  .node:focus{outline:3px solid rgba(110,231,183,0.12)}
+  .node .badge{font-size:11px;opacity:0.95}
+  .tooltip{position:absolute;background:#061023;padding:10px;border-radius:8px;border:1px solid var(--glass-border);color:var(--muted);font-size:13px;box-shadow:0 10px 30px rgba(2,6,23,0.7);pointer-events:none;z-index:40}
+
+  /* details panel */
+  .panel{width:360px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:12px;padding:14px;border:1px solid var(--glass-border);box-shadow:var(--shadow);display:flex;flex-direction:column;gap:12px}
+  .panel.collapsed{width:0;padding:0;border:none;overflow:hidden}
+  .panel h3{margin:0;color:white}
+  .tags{display:flex;gap:8px;flex-wrap:wrap}
+  .tag{background:rgba(255,255,255,0.03);padding:6px 8px;border-radius:8px;font-size:12px;border:1px solid var(--glass-border)}
+  .commands pre{background:#041223;padding:10px;border-radius:8px;color:#a7f3d0;overflow:auto;font-size:13px;border:1px dashed rgba(110,231,183,0.08)}
+  .link{color:#93c5fd;text-decoration:underline;font-size:13px}
+
+  /* breadcrumbs */
+  .crumbs{font-size:13px;color:var(--muted);display:flex;gap:8px;align-items:center}
+  .crumbs button{background:transparent;border:none;color:#9dd3b6;cursor:pointer;padding:4px;border-radius:6px}
+  .crumbs button:focus{outline:2px solid rgba(110,231,183,0.12)}
+
+  /* small helpers */
+  .help-btn{background:linear-gradient(90deg,#6366f1,#06b6d4);padding:8px;border-radius:10px;color:white;border:none;font-weight:700}
+  footer.note{position:absolute;left:16px;bottom:12px;font-size:12px;color:#9aa7b6}
+
+  /* responsive */
+  @media (max-width:980px){
+    main{flex-direction:column}
+    .panel{width:100%;order:2}
+    .vis-wrap{order:1;height:64vh}
+  }
+</style>
+</head>
+<body>
+  <!-- Header: logo, site title, ethics banner, top controls -->
+  <header role="banner" aria-label="SACHIDAX header">
+    <div class="logo-row">
+      <div class="logo-placeholder" id="logo" aria-hidden="true">
+        <!-- inline SVG square logo placeholder -->
+        <svg viewBox="0 0 100 100" aria-hidden="true">
+          <rect x="10" y="10" width="80" height="80" rx="12" fill="white" opacity="0.12"/>
+          <path d="M30 65 L50 35 L70 65 Z" fill="white" opacity="0.85"/>
+        </svg>
+      </div>
+      <div>
+        <div class="brand">SACHIDAX</div>
+        <div style="font-size:11px;color:#9bb6c9;margin-top:2px">Cybersecurity TreeMap</div>
+      </div>
+      <div class="ethics" role="note" aria-live="polite">Ethical use only — Do not use for unauthorized access.</div>
+    </div>
+
+    <div class="toolbar" role="toolbar" aria-label="Top controls">
+      <input id="search" class="search" placeholder="Search roles, tools, commands..." aria-label="Search nodes" />
+      <select id="roleFilter" aria-label="Filter by role">
+        <option value="all">Filter: All roles</option>
+      </select>
+      <button id="exportBtn" class="btn" title="Export visible subtree as JSON">Export JSON</button>
+      <button id="helpBtn" class="help-btn" aria-haspopup="dialog" aria-controls="helpModal">Help</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- Visualization area -->
+    <section class="vis-wrap" aria-label="Tree visualization">
+      <div class="topcontrols" style="z-index:1">
+        <div class="crumbs" id="breadcrumbs" aria-live="polite"></div>
+      </div>
+
+      <!-- Legend top-right -->
+      <div class="legend" role="list" aria-label="Legend">
+        <div class="legend-item"><span class="legend-swatch" id="sw-role"></span> Role</div>
+        <div class="legend-item"><span class="legend-swatch" id="sw-task"></span> Task</div>
+        <div class="legend-item"><span class="legend-swatch" id="sw-tool"></span> Tool</div>
+        <div class="legend-item"><span class="legend-swatch" id="sw-cmd"></span> Command</div>
+      </div>
+
+      <!-- SVG canvas for D3 -->
+      <div id="svgHolder" style="flex:1;position:relative;">
+        <svg id="vizSVG" role="tree" aria-label="Cybersecurity hierarchical tree"></svg>
+        <div class="tooltip" id="tooltip" style="display:none" role="tooltip"></div>
+      </div>
+
+      <footer class="note">Tip: click nodes to expand/collapse. Use the search to jump to nodes. Keyboard navigation supported (Tab, Enter).</footer>
+    </section>
+
+    <!-- Right-side details panel -->
+    <aside class="panel" id="detailsPanel" aria-live="polite" aria-label="Node details">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <h3 id="panelTitle">Select a node</h3>
+        <button id="togglePanel" class="btn" aria-pressed="false" title="Collapse details">⤺</button>
+      </div>
+      <div id="panelMeta" style="font-size:13px;color:var(--muted)"></div>
+      <div id="panelDesc" style="font-size:13px;color:var(--muted)"></div>
+      <div class="commands" id="panelCommands"></div>
+      <div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:6px">Resources</div>
+        <div id="panelLinks" style="display:flex;flex-direction:column;gap:6px"></div>
+      </div>
+      <div style="margin-top:auto;display:flex;justify-content:space-between;align-items:center">
+        <div class="tags" id="panelTags"></div>
+        <div style="font-size:12px;color:#8fbab4">SACHIDAX • Learning</div>
+      </div>
+    </aside>
+  </main>
+
+  <!-- Help modal (hidden) -->
+  <div id="helpModal" role="dialog" aria-modal="true" aria-hidden="true" style="display:none;position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:linear-gradient(180deg,#071021,#071423);padding:20px;border-radius:12px;border:1px solid rgba(255,255,255,0.04);box-shadow:0 20px 60px rgba(0,0,0,0.7);width:720px;max-width:95%;z-index:200">
+    <h2 style="margin-top:0;color:white">Help & Ethics</h2>
+    <p style="color:var(--muted)">This interactive map is a learning and visualization tool showing cybersecurity roles, tasks, common tools and example commands. All content is provided for <strong>defensive learning, authorized testing, and academic research only</strong>. Never use tools or commands on systems you do not own or have explicit permission to test.</p>
+    <ul style="color:var(--muted)">
+      <li>Use <strong>Search</strong> to find nodes — matches will auto-expand the tree.</li>
+      <li>Click a node to expand/collapse. Use <kbd>Tab</kbd> and <kbd>Enter</kbd> to navigate via keyboard.</li>
+      <li>Use the <strong>Export</strong> button to download JSON of the currently visible subtree.</li>
+      <li>If you are learning a tool, consult official documentation linked in the details panel before trying commands.</li>
+    </ul>
+    <div style="margin-top:12px;display:flex;justify-content:flex-end;gap:8px">
+      <button id="closeHelp" class="btn">Close</button>
+    </div>
+  </div>
+
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script>
+/*
+  SACHIDAX — Single-file interactive tree visualization using D3 v7.
+
+  Structure & functions:
+   - DATA: embedded hierarchical JSON (5 levels: Root -> Role -> Task -> Tool -> Commands)
+   - renderTree(data): renders the tree and attaches interactivity
+   - collapseAll(): collapses all non-root nodes
+   - expandTo(nodeId): expands path to a node
+   - searchNodes(query): finds and highlights matches, auto-expands path
+   - exportJSON(node): downloads JSON for a node subtree
+   - Accessibility and keyboard support are added below
+*/
+
+/* =========================
+   1) Embedded DATA (edit here to add roles/tasks/tools)
+   - Keep structure: { name, type, description?, tags?, children: [...] }
+   - Commands are leaves with type: "Command" and property "command"
+   ========================= */
+
+const DATA = {
+  "name": "Cyber Security",
+  "type": "Root",
+  "description": "Overview of cybersecurity roles, tasks, tools, and example commands. For learning and authorized testing only.",
+  "children": [
+    /* For each role we include 2-3 tasks, each task will have some tools (5 tools per role total),
+       and each tool will have 3-6 child nodes of type Command.
+       We distribute exactly 50 distinct tools across 10 roles (5 tools each). */
+    /* --------------------- ROLE: Red Team --------------------- */
+    {
+      "name": "Red Team",
+      "type": "Role",
+      "description": "Offensive security team focused on emulating adversaries to test defenses.",
+      "tags":["offense","adversary-emulation"],
+      "children": [
+        {
+          "name":"External Pen Test",
+          "type":"Task",
+          "description":"Authorized external penetration testing against public-facing assets.",
+          "children":[
+            /* Tools (5 total for Red Team) */
+            {
+              "name":"nmap",
+              "type":"Tool",
+              "description":"Network exploration and port scanning utility (learning use: inventory & defense).",
+              "tags":["network","scan","recon"],
+              "children":[
+                {"name":"nmap -sC -sV -oA scan 127.0.0.1/24","type":"Command","command":"nmap -sC -sV -oA scan 127.0.0.1/24"},
+                {"name":"nmap -Pn -p 1-65535 -T4 192.0.2.1","type":"Command","command":"nmap -Pn -p 1-65535 -T4 192.0.2.1"},
+                {"name":"nmap --script vuln 198.51.100.0/24","type":"Command","command":"nmap --script vuln 198.51.100.0/24"}
+              ]
+            },
+            {
+              "name":"masscan",
+              "type":"Tool",
+              "description":"Fast Internet-scale port scanner (use in lab/authorized environments).",
+              "tags":["scan","large-scale"],
+              "children":[
+                {"name":"masscan 127.0.0.1/24 -p22,80,443 --rate=1000","type":"Command","command":"masscan 127.0.0.1/24 -p22,80,443 --rate=1000"},
+                {"name":"masscan 198.51.100.0/24 -p1-65535 --rate=500","type":"Command","command":"masscan 198.51.100.0/24 -p1-65535 --rate=500"},
+                {"name":"masscan --help","type":"Command","command":"masscan --help"}
+              ]
+            },
+            {
+              "name":"nikto",
+              "type":"Tool",
+              "description":"Web server scanner for known issues (educational scanning of own sites).",
+              "tags":["web","scanner"],
+              "children":[
+                {"name":"nikto -h https://example.com -o nikto_report.txt","type":"Command","command":"nikto -h https://example.com -o nikto_report.txt"},
+                {"name":"nikto -h 127.0.0.1 -Tuning x  -Display V","type":"Command","command":"nikto -h 127.0.0.1 -Tuning x  -Display V"},
+                {"name":"nikto -list-plugins","type":"Command","command":"nikto -list-plugins"}
+              ]
+            },
+            {
+              "name":"metasploit",
+              "type":"Tool",
+              "description":"Framework for authorized security testing and research (use in controlled labs).",
+              "tags":["exploit-framework"],
+              "children":[
+                {"name":"msfconsole -q","type":"Command","command":"msfconsole -q"},
+                {"name":"use exploit/multi/handler","type":"Command","command":"use exploit/multi/handler"},
+                {"name":"set PAYLOAD windows/meterpreter/reverse_tcp","type":"Command","command":"set PAYLOAD windows/meterpreter/reverse_tcp"}
+              ]
+            },
+            {
+              "name":"ncat",
+              "type":"Tool",
+              "description":"Netcat alternative for reading/writing network connections (debugging & lab use).",
+              "tags":["network","utility"],
+              "children":[
+                {"name":"ncat -l 8080 --sh-exec 'echo hello'","type":"Command","command":"ncat -l 8080 --sh-exec 'echo hello'"},
+                {"name":"ncat 127.0.0.1 8080","type":"Command","command":"ncat 127.0.0.1 8080"},
+                {"name":"ncat --help","type":"Command","command":"ncat --help"}
+              ]
+            }
+          ]
+        },
+        {
+          "name":"Social Engineering",
+          "type":"Task",
+          "description":"Human-focused testing such as phishing simulations and awareness campaigns (ethical authorization required).",
+          "children":[
+            {
+              "name":"setuptools",
+              "type":"Tool",
+              "description":"(Placeholder) tools and scripts used to craft awareness simulations (use responsibly).",
+              "tags":["social","awareness"],
+              "children":[
+                {"name":"# Simulation framework - refer to policies","type":"Command","command":"# Use approved frameworks and policies"},
+                {"name":"echo 'Run simulations in lab'","type":"Command","command":"echo 'Run simulations in lab'"},
+                {"name":"# See company policy prior to phishing simulations","type":"Command","command":"# See company policy prior to phishing simulations"}
+              ]
+            },
+            {
+              "name":"gophish",
+              "type":"Tool",
+              "description":"Phishing simulation platform for awareness training in authorized contexts.",
+              "tags":["phishing","awareness"],
+              "children":[
+                {"name":"./gophish -config config.json","type":"Command","command":"./gophish -config config.json"},
+                {"name":"# Use only in consented campaigns","type":"Command","command":"# Use only in consented campaigns"},
+                {"name":"curl http://127.0.0.1:3333","type":"Command","command":"curl http://127.0.0.1:3333"}
+              ]
+            },
+            {
+              "name":"social-engineer-toolkit",
+              "type":"Tool",
+              "description":"Toolkit for social tests; for defenders: study techniques to improve awareness (lab use only).",
+              "tags":["social"],
+              "children":[
+                {"name":"setoolkit","type":"Command","command":"setoolkit"},
+                {"name":"# Inspect toolkit documentation","type":"Command","command":"# Inspect toolkit documentation"},
+                {"name":"setoolkit --help","type":"Command","command":"setoolkit --help"}
+              ]
+            }
+          ]
+        }
+      ]
+    },
+
+    /* --------------------- ROLE: Blue Team --------------------- */
+    {
+      "name": "Blue Team",
+      "type": "Role",
+      "description": "Defensive security team responsible for detection, response and resilience.",
+      "tags":["defense","monitoring"],
+      "children": [
+        {
+          "name":"Incident Response",
+          "type":"Task",
+          "description":"Responding to and investigating security incidents.",
+          "children":[
+            {
+              "name":"volatility",
+              "type":"Tool",
+              "description":"Memory forensics framework for analyzing RAM captures (educational).",
+              "tags":["forensics","memory"],
+              "children":[
+                {"name":"volatility -f memdump.raw --profile=Win7SP1x64 pstree","type":"Command","command":"volatility -f memdump.raw --profile=Win7SP1x64 pstree"},
+                {"name":"volatility -f memdump.vmem imageinfo","type":"Command","command":"volatility -f memdump.vmem imageinfo"},
+                {"name":"volatility -f mem.raw --profile=Linux pslist","type":"Command","command":"volatility -f mem.raw --profile=Linux pslist"}
+              ]
+            },
+            {
+              "name":"sleuthkit",
+              "type":"Tool",
+              "description":"File system forensics utilities (analyze disk images in controlled labs).",
+              "tags":["forensics","disk"],
+              "children":[
+                {"name":"fls -r disk.img","type":"Command","command":"fls -r disk.img"},
+                {"name":"icat disk.img 12345 > extracted.txt","type":"Command","command":"icat disk.img 12345 > extracted.txt"},
+                {"name":"mmls disk.img","type":"Command","command":"mmls disk.img"}
+              ]
+            },
+            {
+              "name":"autopsy",
+              "type":"Tool",
+              "description":"Graphical forensics platform to analyze disk images and artifacts.",
+              "tags":["forensics","gui"],
+              "children":[
+                {"name":"autopsy &","type":"Command","command":"autopsy &"},
+                {"name":"autopsy -h","type":"Command","command":"autopsy -h"},
+                {"name":"# Use with forensic copies of evidence","type":"Command","command":"# Use with forensic copies of evidence"}
+              ]
+            },
+            {
+              "name":"sleuthkit-duo",
+              "type":"Tool",
+              "description":"(Auxiliary) additional disk analysis helpers (learning only).",
+              "tags":["forensics"],
+              "children":[
+                {"name":"tsk_recover disk.img recovered/","type":"Command","command":"tsk_recover disk.img recovered/"},
+                {"name":"fsstat disk.img","type":"Command","command":"fsstat disk.img"},
+                {"name":"istat disk.img 1024","type":"Command","command":"istat disk.img 1024"}
+              ]
+            },
+            {
+              "name":"yara",
+              "type":"Tool",
+              "description":"Pattern-matching tool for malware research and detection (use signatures responsibly).",
+              "tags":["detection","malware"],
+              "children":[
+                {"name":"yara -r rules.yar sample.bin","type":"Command","command":"yara -r rules.yar sample.bin"},
+                {"name":"yara --help","type":"Command","command":"yara --help"},
+                {"name":"yara -s rules.yar sample.bin","type":"Command","command":"yara -s rules.yar sample.bin"}
+              ]
+            }
+          ]
+        },
+        {
+          "name":"Hunt & Monitoring",
+          "type":"Task",
+          "description":"Proactive threat hunting and continuous monitoring.",
+          "children":[
+            {
+              "name":"splunk",
+              "type":"Tool",
+              "description":"Log aggregation and SIEM solution (configure and query logs for detection).",
+              "tags":["siem","logs"],
+              "children":[
+                {"name":"index=_internal | stats count by sourcetype","type":"Command","command":"index=_internal | stats count by sourcetype"},
+                {"name":"search index=main error | head 50","type":"Command","command":"search index=main error | head 50"},
+                {"name":"splunk btool inputs list","type":"Command","command":"splunk btool inputs list"}
+              ]
+            },
+            {
+              "name":"osquery",
+              "type":"Tool",
+              "description":"Endpoint visibility via SQL-based queries — great for inventory and detection.",
+              "tags":["endpoint","visibility"],
+              "children":[
+                {"name":"SELECT name,uid FROM users;","type":"Command","command":"SELECT name,uid FROM users;"},
+                {"name":"osqueryi --json 'SELECT * FROM processes'","type":"Command","command":"osqueryi --json 'SELECT * FROM processes'"},
+                {"name":"osqueryctl start","type":"Command","command":"osqueryctl start"}
+              ]
+            },
+            {
+              "name":"sysmon",
+              "type":"Tool",
+              "description":"Windows event logging for enhanced telemetry (use to harden detection).",
+              "tags":["telemetry"],
+              "children":[
+                {"name":"sysmon -i sysmonconfig.xml","type":"Command","command":"sysmon -i sysmonconfig.xml"},
+                {"name":"# Check event viewer for Sysmon events","type":"Command","command":"# Check event viewer for Sysmon events"},
+                {"name":"sysmon -c","type":"Command","command":"sysmon -c"}
+              ]
+            },
+            {
+              "name":"zeek",
+              "type":"Tool",
+              "description":"Network analysis framework for extracting metadata and detecting anomalies.",
+              "tags":["network","analysis"],
+              "children":[
+                {"name":"zeek -i eth0 local","type":"Command","command":"zeek -i eth0 local"},
+                {"name":"zeekctl deploy","type":"Command","command":"zeekctl deploy"},
+                {"name":"zeek --help","type":"Command","command":"zeek --help"}
+              ]
+            },
+            {
+              "name":"suricata",
+              "type":"Tool",
+              "description":"High-performance network IDS/IPS for detecting suspicious traffic (defensive use).",
+              "tags":["ids","network"],
+              "children":[
+                {"name":"suricata -c /etc/suricata/suricata.yaml -i eth0","type":"Command","command":"suricata -c /etc/suricata/suricata.yaml -i eth0"},
+                {"name":"suricata-update --show-sources","type":"Command","command":"suricata-update --show-sources"},
+                {"name":"suricata --help","type":"Command","command":"suricata --help"}
+              ]
+            }
+          ]
+        }
+      ]
+    },
+
+    /* --------------------- ROLE: Purple Team --------------------- */
+    {
+      "name":"Purple Team",
+      "type":"Role",
+      "description":"Collaborative exercises combining Red & Blue teams to improve detection and emulation.",
+      "tags":["collaboration"],
+      "children":[
+        {
+          "name":"Adversary Emulation",
+          "type":"Task",
+          "description":"Designing realistic exercises to test detection.",
+          "children":[
+            {
+              "name":"bloodhound",
+              "type":"Tool",
+              "description":"Active Directory analysis tool to map relationships and exposures (use in lab/consented tests).",
+              "tags":["ad","analysis"],
+              "children":[
+                {"name":"Invoke-BloodHound -CollectionMethod All","type":"Command","command":"Invoke-BloodHound -CollectionMethod All"},
+                {"name":"bloodhound-python -c all -u user -p pass","type":"Command","command":"bloodhound-python -c all -u user -p pass"},
+                {"name":"# Analyze graphs in BloodHound UI","type":"Command","command":"# Analyze graphs in BloodHound UI"}
+              ]
+            },
+            {
+              "name":"empcat",
+              "type":"Tool",
+              "description":"(Placeholder) simulated attack orchestration helpers for purple exercises (lab use).",
+              "tags":["orchestration"],
+              "children":[
+                {"name":"# use orchestration to run safe scenarios","type":"Command","command":"# use orchestration to run safe scenarios"},
+                {"name":"echo 'exercise initiated'","type":"Command","command":"echo 'exercise initiated'"},
+                {"name":"# consult playbook","type":"Command","command":"# consult playbook"}
+              ]
+            },
+            {
+              "name":"velociraptor",
+              "type":"Tool",
+              "description":"Endpoint visibility & collection tool for forensic and detection workflows.",
+              "tags":["endpoint","collection"],
+              "children":[
+                {"name":"velocidade --help","type":"Command","command":"velocidade --help"},
+                {"name":"velociraptor config apply","type":"Command","command":"velociraptor config apply"},
+                {"name":"# Use to collect artifacts from endpoints (consent)","type":"Command","command":"# Use to collect artifacts from endpoints (consent)"}
+              ]
+            },
+            {
+              "name":"osquery-fleet",
+              "type":"Tool",
+              "description":"Fleet management of osquery agents to deploy queries across estate.",
+              "tags":["fleet","endpoint"],
+              "children":[
+                {"name":"fleetctl get hosts","type":"Command","command":"fleetctl get hosts"},
+                {"name":"fleetctl query list","type":"Command","command":"fleetctl query list"},
+                {"name":"# Use with approved query packs","type":"Command","command":"# Use with approved query packs"}
+              ]
+            },
+            {
+              "name":"splunk-adp",
+              "type":"Tool",
+              "description":"(Addon) Splunk apps and detection packages for lab testing and tuning.",
+              "tags":["siem"],
+              "children":[
+                {"name":"# Install TA and configure inputs","type":"Command","command":"# Install TA and configure inputs"},
+                {"name":"# Tune detections for low false positives","type":"Command","command":"# Tune detections for low false positives"},
+                {"name":"splunk restart","type":"Command","command":"splunk restart"}
+              ]
+            }
+          ]
+        }
+      ]
+    },
+
+    /* --------------------- ROLE: SOC Analyst --------------------- */
+    {
+      "name":"SOC Analyst",
+      "type":"Role",
+      "description":"Analysts who triage alerts and escalate incidents from monitoring systems.",
+      "tags":["monitoring","triage"],
+      "children":[
+        {
+          "name":"Alert Triage",
+          "type":"Task",
+          "description":"Process alerts, enrich events and escalate as needed.",
+          "children":[
+            {
+              "name":"jq",
+              "type":"Tool",
+              "description":"JSON processor used to parse and filter logs in pipelines.",
+              "tags":["utility","parsing"],
+              "children":[
+                {"name":"cat events.json | jq .[] | jq '.user, .event'","type":"Command","command":"cat events.json | jq .[] | jq '.user, .event'"},
+                {"name":"jq '.[] | select(.level==\"error\")' logs.json","type":"Command","command":"jq '.[] | select(.level==\"error\")' logs.json"},
+                {"name":"jq --help","type":"Command","command":"jq --help"}
+              ]
+            },
+            {
+              "name":"tcpdump",
+              "type":"Tool",
+              "description":"Packet capture tool for network troubleshooting and incident validation.",
+              "tags":["network","capture"],
+              "children":[
+                {"name":"tcpdump -i any -w capture.pcap","type":"Command","command":"tcpdump -i any -w capture.pcap"},
+                {"name":"tcpdump -r capture.pcap -nn","type":"Command","command":"tcpdump -r capture.pcap -nn"},
+                {"name":"tcpdump -i eth0 port 80","type":"Command","command":"tcpdump -i eth0 port 80"}
+              ]
+            },
+            {
+              "name":"wireshark",
+              "type":"Tool",
+              "description":"GUI packet analysis tool for detailed inspection of captures (use offline copies).",
+              "tags":["analysis","gui"],
+              "children":[
+                {"name":"wireshark capture.pcap","type":"Command","command":"wireshark capture.pcap"},
+                {"name":"tshark -r capture.pcap -Y 'http' -T fields -e http.host","type":"Command","command":"tshark -r capture.pcap -Y 'http' -T fields -e http.host"},
+                {"name":"wireshark --help","type":"Command","command":"wireshark --help"}
+              ]
+            },
+            {
+              "name":"grep",
+              "type":"Tool",
+              "description":"Classic text search; used heavily in log triage and quick investigations.",
+              "tags":["utility","parsing"],
+              "children":[
+                {"name":"grep -i 'failed login' /var/log/auth.log","type":"Command","command":"grep -i 'failed login' /var/log/auth.log"},
+                {"name":"zgrep 'malware' *.gz","type":"Command","command":"zgrep 'malware' *.gz"},
+                {"name":"grep -R --line-number 'username' /srv/logs","type":"Command","command":"grep -R --line-number 'username' /srv/logs"}
+              ]
+            },
+            {
+              "name":"jqplay",
+              "type":"Tool",
+              "description":"(Aux) helper scripts for JSON enrichment and parsing in SOC workflows.",
+              "tags":["utility"],
+              "children":[
+                {"name":"./enrich.sh events.json > enriched.json","type":"Command","command":"./enrich.sh events.json > enriched.json"},
+                {"name":"python3 parser.py logs.json","type":"Command","command":"python3 parser.py logs.json"},
+                {"name":"# Always sanitize PII when sharing","type":"Command","command":"# Always sanitize PII when sharing"}
+              ]
+            }
+          ]
+        }
+      ]
+    },
+
+    /* --------------------- ROLE: Forensics --------------------- */
+    {
+      "name":"Forensics",
+      "type":"Role",
+      "description":"Digital forensics teams that perform evidence collection and analysis.",
+      "tags":["forensics","evidence"],
+      "children":[
+        {
+          "name":"Disk & Memory Analysis",
+          "type":"Task",
+          "description":"Acquiring and analyzing disk and memory artifacts for investigations.",
+          "children":[
+            {
+              "name":"dcfldd",
+              "type":"Tool",
+              "description":"Forensic-grade imaging tool for disk acquisition (use write-blockers and proper chain-of-custody).",
+              "tags":["imaging","forensics"],
+              "children":[
+                {"name":"dcfldd if=/dev/sda of=/evidence/disk.img hash=sha256","type":"Command","command":"dcfldd if=/dev/sda of=/evidence/disk.img hash=sha256"},
+                {"name":"dcfldd --help","type":"Command","command":"dcfldd --help"},
+                {"name":"dcfldd if=image.dd of=copy.dd conv=noerror","type":"Command","command":"dcfldd if=image.dd of=copy.dd conv=noerror"}
+              ]
+            },
+            {
+              "name":"afflib",
+              "type":"Tool",
+              "description":"Advanced Forensics Format (AFF) toolkit for handling forensic images.",
+              "tags":["forensics","image"],
+              "children":[
+                {"name":"affconvert image.raw image.aff","type":"Command","command":"affconvert image.raw image.aff"},
+                {"name":"afinfo image.aff","type":"Command","command":"afinfo image.aff"},
+                {"name":"# Use AFF for robust metadata preservation","type":"Command","command":"# Use AFF for robust metadata preservation"}
+              ]
+            },
+            {
+              "name":"hashdeep",
+              "type":"Tool",
+              "description":"Hashing toolkit for verifying evidence integrity across datasets.",
+              "tags":["integrity"],
+              "children":[
+                {"name":"hashdeep -r -l manifest.txt evidence/","type":"Command","command":"hashdeep -r -l manifest.txt evidence/"},
+                {"name":"hashdeep -vv file.bin","type":"Command","command":"hashdeep -vv file.bin"},
+                {"name":"# Use checksums to verify copies","type":"Command","command":"# Use checksums to verify copies"}
+              ]
+            },
+            {
+              "name":"volatility-plugins",
+              "type":"Tool",
+              "description":"Supplemental plugins for advanced memory analysis scenarios.",
+              "tags":["memory"],
+              "children":[
+                {"name":"volatility -f memdump.raw pslist","type":"Command","command":"volatility -f memdump.raw pslist"},
+                {"name":"volatility -f mem.raw connscan","type":"Command","command":"volatility -f mem.raw connscan"},
+                {"name":"# Refer to volatility docs for plugin usage","type":"Command","command":"# Refer to volatility docs for plugin usage"}
+              ]
+            },
+            {
+              "name":"bulk_extractor",
+              "type":"Tool",
+              "description":"Scans disk images for artifacts like URLs, emails and other artifacts.",
+              "tags":["artifact","scan"],
+              "children":[
+                {"name":"bulk_extractor -o out/ disk.img","type":"Command","command":"bulk_extractor -o out/ disk.img"},
+                {"name":"# Review reports in the output directory","type":"Command","command":"# Review reports in the output directory"},
+                {"name":"bulk_extractor -V","type":"Command","command":"bulk_extractor -V"}
+              ]
+            }
+          ]
+        }
+      ]
+    },
+
+    /* --------------------- ROLE: Threat Intelligence --------------------- */
+    {
+      "name":"Threat Intelligence",
+      "type":"Role",
+      "description":"Collecting and analyzing information about threats to inform defenders.",
+      "tags":["intel","threat"],
+      "children":[
+        {
+          "name":"OSINT & Feeds",
+          "type":"Task",
+          "description":"Open-source intelligence, feed ingestion and enrichment.",
+          "children":[
+            {
+              "name":"amass",
+              "type":"Tool",
+              "description":"DNS enumeration and mapping for asset discovery (use for inventory & defense).",
+              "tags":["recon","dns"],
+              "children":[
+                {"name":"amass enum -d example.com -o amass.txt","type":"Command","command":"amass enum -d example.com -o amass.txt"},
+                {"name":"amass viz -d example.com -o graph.json","type":"Command","command":"amass viz -d example.com -o graph.json"},
+                {"name":"amass --help","type":"Command","command":"amass --help"}
+              ]
+            },
+            {
+              "name":"sublist3r",
+              "type":"Tool",
+              "description":"Subdomain enumeration tool for mapping an organization's external footprint.",
+              "tags":["dns","recon"],
+              "children":[
+                {"name":"sublist3r -d example.com -o subs.txt","type":"Command","command":"sublist3r -d example.com -o subs.txt"},
+                {"name":"# Use only against authorized scopes","type":"Command","command":"# Use only against authorized scopes"},
+                {"name":"sublist3r --help","type":"Command","command":"sublist3r --help"}
+              ]
+            },
+            {
+              "name":"cve-search",
+              "type":"Tool",
+              "description":"Database and tools for tracking CVE information and vulnerabilities.",
+              "tags":["vuln","intel"],
+              "children":[
+                {"name":"cve-search.py -p CVE-2020-1234","type":"Command","command":"cve-search.py -p CVE-2020-1234"},
+                {"name":"# Subscribe to vulnerability feeds","type":"Command","command":"# Subscribe to vulnerability feeds"},
+                {"name":"cve-search --help","type":"Command","command":"cve-search --help"}
+              ]
+            },
+            {
+              "name":"misp",
+              "type":"Tool",
+              "description":"Malware Information Sharing Platform for collaborative threat intel sharing.",
+              "tags":["intel","sharing"],
+              "children":[
+                {"name":"# Use MISP instance to share events within trust groups","type":"Command","command":"# Use MISP instance to share events within trust groups"},
+                {"name":"misp-modules -l","type":"Command","command":"misp-modules -l"},
+                {"name":"# Validate indicators before ingestion","type":"Command","command":"# Validate indicators before ingestion"}
+              ]
+            },
+            {
+              "name":"shodan",
+              "type":"Tool",
+              "description":"Internet asset search engine for research and monitoring of public exposures.",
+              "tags":["asset","monitoring"],
+              "children":[
+                {"name":"shodan host 1.2.3.4","type":"Command","command":"shodan host 1.2.3.4"},
+                {"name":"shodan search 'apache' --limit 10","type":"Command","command":"shodan search 'apache' --limit 10"},
+                {"name":"# Use API keys responsibly","type":"Command","command":"# Use API keys responsibly"}
+              ]
+            }
+          ]
+        }
+      ]
+    },
+
+    /* --------------------- ROLE: Penetration Tester --------------------- */
+    {
+      "name":"Penetration Tester",
+      "type":"Role",
+      "description":"Specialists who perform authorized, scoped security testing.",
+      "tags":["offense","testing"],
+      "children":[
+        {
+          "name":"Web App Testing",
+          "type":"Task",
+          "description":"Testing web applications for common security flaws within authorization scopes.",
+          "children":[
+            {
+              "name":"burp-suite",
+              "type":"Tool",
+              "description":"Proxy-based web testing platform with many analysis features (education only).",
+              "tags":["web","proxy"],
+              "children":[
+                {"name":"burp &","type":"Command","command":"burp &"},
+                {"name":"# Configure proxy in browser to 127.0.0.1:8080","type":"Command","command":"# Configure proxy in browser to 127.0.0.1:8080"},
+                {"name":"burp --help","type":"Command","command":"burp --help"}
+              ]
+            },
+            {
+              "name":"sqlmap",
+              "type":"Tool",
+              "description":"Automated SQL injection discovery tool (only within authorized test scopes).",
+              "tags":["web","vuln"],
+              "children":[
+                {"name":"sqlmap -u 'http://localhost/test?id=1' --batch --level=2","type":"Command","command":"sqlmap -u 'http://localhost/test?id=1' --batch --level=2"},
+                {"name":"sqlmap --help","type":"Command","command":"sqlmap --help"},
+                {"name":"sqlmap -r request.txt --batch","type":"Command","command":"sqlmap -r request.txt --batch"}
+              ]
+            },
+            {
+              "name":"owasp-zap",
+              "type":"Tool",
+              "description":"OWASP ZAP - open-source web app scanner and proxy useful for security testing and learning.",
+              "tags":["web","scanner"],
+              "children":[
+                {"name":"zap.sh -daemon -port 8090","type":"Command","command":"zap.sh -daemon -port 8090"},
+                {"name":"zap-cli -p 8090 status","type":"Command","command":"zap-cli -p 8090 status"},
+                {"name":"# Run passive scanning in test environment","type":"Command","command":"# Run passive scanning in test environment"}
+              ]
+            },
+            {
+              "name":"gobuster",
+              "type":"Tool",
+              "description":"Directory and DNS brute-force tool useful for mapping assets (use responsibly).",
+              "tags":["recon","web"],
+              "children":[
+                {"name":"gobuster dir -u https://example.com -w wordlist.txt","type":"Command","command":"gobuster dir -u https://example.com -w wordlist.txt"},
+                {"name":"gobuster dns -d example.com -w subdomains.txt","type":"Command","command":"gobuster dns -d example.com -w subdomains.txt"},
+                {"name":"gobuster --help","type":"Command","command":"gobuster --help"}
+              ]
+            },
+            {
+              "name":"dirb",
+              "type":"Tool",
+              "description":"Simple web content scanner for directory discovery (educational usage only).",
+              "tags":["web","recon"],
+              "children":[
+                {"name":"dirb https://example.com /usr/share/wordlists/dirb/common.txt","type":"Command","command":"dirb https://example.com /usr/share/wordlists/dirb/common.txt"},
+                {"name":"dirb --help","type":"Command","command":"dirb --help"},
+                {"name":"# Only scan within scope","type":"Command","command":"# Only scan within scope"}
+              ]
+            }
+          ]
+        }
+      ]
+    },
+
+    /* --------------------- ROLE: Application Security --------------------- */
+    {
+      "name":"Application Security",
+      "type":"Role",
+      "description":"Design and review secure software; conduct code review and static analysis.",
+      "tags":["appsec","secure-dev"],
+      "children":[
+        {
+          "name":"Static Analysis",
+          "type":"Task",
+          "description":"Automated and manual review of source code for vulnerabilities.",
+          "children":[
+            {
+              "name":"bandit",
+              "type":"Tool",
+              "description":"Security linter for Python code to identify common issues.",
+              "tags":["sast","python"],
+              "children":[
+                {"name":"bandit -r ./project -lll -f json -o bandit.json","type":"Command","command":"bandit -r ./project -lll -f json -o bandit.json"},
+                {"name":"bandit --help","type":"Command","command":"bandit --help"},
+                {"name":"# Review findings and triage false positives","type":"Command","command":"# Review findings and triage false positives"}
+              ]
+            },
+            {
+              "name":"semgrep",
+              "type":"Tool",
+              "description":"Lightweight static analysis for many languages with custom rules.",
+              "tags":["sast"],
+              "children":[
+                {"name":"semgrep --config p/ci .","type":"Command","command":"semgrep --config p/ci ."},
+                {"name":"semgrep --help","type":"Command","command":"semgrep --help"},
+                {"name":"semgrep rule.yml src/","type":"Command","command":"semgrep rule.yml src/"}
+              ]
+            },
+            {
+              "name":"dependency-check",
+              "type":"Tool",
+              "description":"Checks project dependencies for known vulnerable versions.",
+              "tags":["supply-chain"],
+              "children":[
+                {"name":"dependency-check.sh --project myapp --scan .","type":"Command","command":"dependency-check.sh --project myapp --scan ."},
+                {"name":"dependency-check --help","type":"Command","command":"dependency-check --help"},
+                {"name":"# Integrate into CI for alerts","type":"Command","command":"# Integrate into CI for alerts"}
+              ]
+            },
+            {
+              "name":"gitleaks",
+              "type":"Tool",
+              "description":"Scan git repositories for leaked secrets and credentials.",
+              "tags":["secret-detection"],
+              "children":[
+                {"name":"gitleaks detect --source ./repo --report=gitleaks.json","type":"Command","command":"gitleaks detect --source ./repo --report=gitleaks.json"},
+                {"name":"gitleaks --help","type":"Command","command":"gitleaks --help"},
+                {"name":"# Remediate secrets found and rotate keys","type":"Command","command":"# Remediate secrets found and rotate keys"}
+              ]
+            },
+            {
+              "name":"ffuf",
+              "type":"Tool",
+              "description":"Fast web fuzzer for testing inputs and discovering endpoints (use within scope).",
+              "tags":["fuzz","web"],
+              "children":[
+                {"name":"ffuf -u https://example.com/FUZZ -w wordlist.txt -mc 200","type":"Command","command":"ffuf -u https://example.com/FUZZ -w wordlist.txt -mc 200"},
+                {"name":"ffuf --help","type":"Command","command":"ffuf --help"},
+                {"name":"# Use in pre-production testing","type":"Command","command":"# Use in pre-production testing"}
+              ]
+            }
+          ]
+        }
+      ]
+    },
+
+    /* --------------------- ROLE: Network Security --------------------- */
+    {
+      "name":"Network Security",
+      "type":"Role",
+      "description":"Protecting networks using segmentation, monitoring, and controls.",
+      "tags":["network","security"],
+      "children":[
+        {
+          "name":"Traffic Analysis",
+          "type":"Task",
+          "description":"Analyze and control network traffic to detect anomalies.",
+          "children":[
+            {
+              "name":"tcpflow",
+              "type":"Tool",
+              "description":"Captures and reconstructs TCP flows for analysis (defensive lab use).",
+              "tags":["network","analysis"],
+              "children":[
+                {"name":"tcpflow -r capture.pcap","type":"Command","command":"tcpflow -r capture.pcap"},
+                {"name":"tcpflow -i eth0 port 80","type":"Command","command":"tcpflow -i eth0 port 80"},
+                {"name":"tcpflow --help","type":"Command","command":"tcpflow --help"}
+              ]
+            },
+            {
+              "name":"smbclient",
+              "type":"Tool",
+              "description":"SMB/CIFS client useful for integration testing and debugging on networks.",
+              "tags":["network","smb"],
+              "children":[
+                {"name":"smbclient -L //127.0.0.1 -N","type":"Command","command":"smbclient -L //127.0.0.1 -N"},
+                {"name":"smbclient //127.0.0.1/share -U user","type":"Command","command":"smbclient //127.0.0.1/share -U user"},
+                {"name":"smbclient --help","type":"Command","command":"smbclient --help"}
+              ]
+            },
+            {
+              "name":"socat",
+              "type":"Tool",
+              "description":"Network relay and utility used for testing and debugging connections.",
+              "tags":["network","utility"],
+              "children":[
+                {"name":"socat TCP-LISTEN:8080,fork TCP:127.0.0.1:80","type":"Command","command":"socat TCP-LISTEN:8080,fork TCP:127.0.0.1:80"},
+                {"name":"socat -V","type":"Command","command":"socat -V"},
+                {"name":"# Use for benign tunnel testing in lab","type":"Command","command":"# Use for benign tunnel testing in lab"}
+              ]
+            },
+            {
+              "name":"ettercap",
+              "type":"Tool",
+              "description":"Network analysis and MITM tool (listed for defender awareness; use only in labs).",
+              "tags":["analysis","awareness"],
+              "children":[
+                {"name":"ettercap -T -i eth0","type":"Command","command":"ettercap -T -i eth0"},
+                {"name":"ettercap --help","type":"Command","command":"ettercap --help"},
+                {"name":"# Use in isolated environments only","type":"Command","command":"# Use in isolated environments only"}
+              ]
+            },
+            {
+              "name":"netcat",
+              "type":"Tool",
+              "description":"Utility for reading/writing network sockets; used for debugging and testing.",
+              "tags":["utility","network"],
+              "children":[
+                {"name":"nc -l 12345","type":"Command","command":"nc -l 12345"},
+                {"name":"nc 127.0.0.1 12345","type":"Command","command":"nc 127.0.0.1 12345"},
+                {"name":"nc -zv host 22-25","type":"Command","command":"nc -zv host 22-25"}
+              ]
+            }
+          ]
+        }
+      ]
+    },
+
+    /* --------------------- ROLE: Cloud Security --------------------- */
+    {
+      "name":"Cloud Security",
+      "type":"Role",
+      "description":"Security for cloud platforms, identity, configuration and infrastructure as code.",
+      "tags":["cloud","iac"],
+      "children":[
+        {
+          "name":"Cloud Configuration",
+          "type":"Task",
+          "description":"Reviewing configurations, IAM policies and infrastructure automation.",
+          "children":[
+            {
+              "name":"aws-cli",
+              "type":"Tool",
+              "description":"AWS command-line interface for managing and auditing cloud resources (use with least-privilege).",
+              "tags":["aws","cli"],
+              "children":[
+                {"name":"aws s3 ls --profile audit","type":"Command","command":"aws s3 ls --profile audit"},
+                {"name":"aws iam list-users --output table","type":"Command","command":"aws iam list-users --output table"},
+                {"name":"aws sts get-caller-identity","type":"Command","command":"aws sts get-caller-identity"}
+              ]
+            },
+            {
+              "name":"gcloud",
+              "type":"Tool",
+              "description":"Google Cloud CLI for managing GCP resources and auditing configurations.",
+              "tags":["gcp","cli"],
+              "children":[
+                {"name":"gcloud projects list","type":"Command","command":"gcloud projects list"},
+                {"name":"gcloud iam service-accounts list","type":"Command","command":"gcloud iam service-accounts list"},
+                {"name":"gcloud --help","type":"Command","command":"gcloud --help"}
+              ]
+            },
+            {
+              "name":"kubectl",
+              "type":"Tool",
+              "description":"Kubernetes CLI for inspecting cluster resources and security posture.",
+              "tags":["k8s","cli"],
+              "children":[
+                {"name":"kubectl get pods -A","type":"Command","command":"kubectl get pods -A"},
+                {"name":"kubectl describe pod mypod -n default","type":"Command","command":"kubectl describe pod mypod -n default"},
+                {"name":"kubectl explain deployment","type":"Command","command":"kubectl explain deployment"}
+              ]
+            },
+            {
+              "name":"terraform",
+              "type":"Tool",
+              "description":"Infrastructure-as-code tool; used for security reviews of IaC configurations.",
+              "tags":["iac","terraform"],
+              "children":[
+                {"name":"terraform plan -out=tfplan","type":"Command","command":"terraform plan -out=tfplan"},
+                {"name":"terraform validate","type":"Command","command":"terraform validate"},
+                {"name":"terraform show -json tfplan > plan.json","type":"Command","command":"terraform show -json tfplan > plan.json"}
+              ]
+            },
+            {
+              "name":"aws-config-check",
+              "type":"Tool",
+              "description":"(Aux) scripts and scanners for cloud configuration auditing (use in authorized accounts).",
+              "tags":["audit","cloud"],
+              "children":[
+                {"name":"python3 check_iam.py --account 123456789012","type":"Command","command":"python3 check_iam.py --account 123456789012"},
+                {"name":"# Always run in read-only mode first","type":"Command","command":"# Always run in read-only mode first"},
+                {"name":"aws configservice get-resource-config-history --resource-type AWS::IAM::User","type":"Command","command":"aws configservice get-resource-config-history --resource-type AWS::IAM::User"}
+              ]
+            }
+          ]
+        }
+      ]
+    },
+
+    /* --------------------- ROLE: Identity & Access / Misc Offensive Tools --------------------- */
+    {
+      "name":"Identity & Access",
+      "type":"Role",
+      "description":"Tools and tasks around identity management, authentication and password testing (for defenders).",
+      "tags":["identity"],
+      "children":[
+        {
+          "name":"Credential Assessment",
+          "type":"Task",
+          "description":"Assess password strength and authentication configurations in authorized tests.",
+          "children":[
+            {
+              "name":"john",
+              "type":"Tool",
+              "description":"Password cracking tool useful for assessing password strength in lab and recovery scenarios.",
+              "tags":["password"],
+              "children":[
+                {"name":"john --wordlist=rockyou.txt --format=nt hashfile.txt","type":"Command","command":"john --wordlist=rockyou.txt --format=nt hashfile.txt"},
+                {"name":"john --show hashfile.txt","type":"Command","command":"john --show hashfile.txt"},
+                {"name":"john --help","type":"Command","command":"john --help"}
+              ]
+            },
+            {
+              "name":"hashcat",
+              "type":"Tool",
+              "description":"GPU-accelerated password recovery tool for defenders and recovery operations.",
+              "tags":["password","gpu"],
+              "children":[
+                {"name":"hashcat -m 1000 -a 0 hashes.txt wordlist.txt","type":"Command","command":"hashcat -m 1000 -a 0 hashes.txt wordlist.txt"},
+                {"name":"hashcat --show hashes.txt","type":"Command","command":"hashcat --show hashes.txt"},
+                {"name":"hashcat --help","type":"Command","command":"hashcat --help"}
+              ]
+            },
+            {
+              "name":"hydra",
+              "type":"Tool",
+              "description":"Brute-force login utility — listed for awareness and authorized password auditing only.",
+              "tags":["password","bruteforce"],
+              "children":[
+                {"name":"hydra -l admin -P passwords.txt ssh://127.0.0.1","type":"Command","command":"hydra -l admin -P passwords.txt ssh://127.0.0.1"},
+                {"name":"hydra -L users.txt -P passlist.txt ftp://127.0.0.1","type":"Command","command":"hydra -L users.txt -P passlist.txt ftp://127.0.0.1"},
+                {"name":"# Use only in authorized tests","type":"Command","command":"# Use only in authorized tests"}
+              ]
+            },
+            {
+              "name":"crackmapexec",
+              "type":"Tool",
+              "description":"Posture and assessment tool for Windows networks (use defensively in lab environments).",
+              "tags":["ad","assessment"],
+              "children":[
+                {"name":"crackmapexec smb 192.0.2.0/24 -u user -p pass","type":"Command","command":"crackmapexec smb 192.0.2.0/24 -u user -p pass"},
+                {"name":"crackmapexec --help","type":"Command","command":"crackmapexec --help"},
+                {"name":"# Use to assess domain exposure in lab","type":"Command","command":"# Use to assess domain exposure in lab"}
+              ]
+            },
+            {
+              "name":"impacket",
+              "type":"Tool",
+              "description":"Collection of Python classes for working with network protocols — used for research and testing with consent.",
+              "tags":["protocols","python"],
+              "children":[
+                {"name":"python3 examples/smbserver.py share ./","type":"Command","command":"python3 examples/smbserver.py share ./"},
+                {"name":"wmiexec.py user:pass@127.0.0.1","type":"Command","command":"wmiexec.py user:pass@127.0.0.1"},
+                {"name":"# Use examples to learn protocols, not to abuse","type":"Command","command":"# Use examples to learn protocols, not to abuse"}
+              ]
+            }
+          ]
+        }
+      ]
+    },
+
+    /* --------------------- ROLE: Miscellaneous Tools for Research & Utility --------------------- */
+    {
+      "name":"Research & Utilities",
+      "type":"Role",
+      "description":"General utilities used across roles for safe research and analysis.",
+      "tags":["tools","research"],
+      "children":[
+        {
+          "name":"Tooling & Lab",
+          "type":"Task",
+          "description":"Support utilities and lab tooling for safe experimentation and testing.",
+          "children":[
+            {
+              "name":"git",
+              "type":"Tool",
+              "description":"Version control for managing code, playbooks and scripts in security projects.",
+              "tags":["vcs"],
+              "children":[
+                {"name":"git clone https://github.com/example/repo.git","type":"Command","command":"git clone https://github.com/example/repo.git"},
+                {"name":"git status","type":"Command","command":"git status"},
+                {"name":"git diff HEAD~1..HEAD","type":"Command","command":"git diff HEAD~1..HEAD"}
+              ]
+            },
+            {
+              "name":"docker",
+              "type":"Tool",
+              "description":"Container runtime used to create isolated lab environments for safe testing.",
+              "tags":["lab","container"],
+              "children":[
+                {"name":"docker run -it --rm alpine sh","type":"Command","command":"docker run -it --rm alpine sh"},
+                {"name":"docker-compose up -d","type":"Command","command":"docker-compose up -d"},
+                {"name":"docker ps -a","type":"Command","command":"docker ps -a"}
+              ]
+            },
+            {
+              "name":"jq-utils",
+              "type":"Tool",
+              "description":"Helper scripts built on jq for log ingestion and parsing.",
+              "tags":["parsing"],
+              "children":[
+                {"name":"./parse_logs.sh /var/log > parsed.json","type":"Command","command":"./parse_logs.sh /var/log > parsed.json"},
+                {"name":"cat parsed.json | jq '.'","type":"Command","command":"cat parsed.json | jq '.'"},
+                {"name":"# Keep PII out of shared artifacts","type":"Command","command":"# Keep PII out of shared artifacts"}
+              ]
+            },
+            {
+              "name":"openvas",
+              "type":"Tool",
+              "description":"Vulnerability scanner for vulnerability management teams; use on authorized targets.",
+              "tags":["vuln","scanner"],
+              "children":[
+                {"name":"openvas -sV -o report.html target","type":"Command","command":"openvas -sV -o report.html target"},
+                {"name":"# Scan only with permission","type":"Command","command":"# Scan only with permission"},
+                {"name":"openvas --help","type":"Command","command":"openvas --help"}
+              ]
+            },
+            {
+              "name":"cuckoo",
+              "type":"Tool",
+              "description":"Malware sandbox for safely executing and analyzing suspicious samples offline.",
+              "tags":["malware","sandbox"],
+              "children":[
+                {"name":"cuckoo submit sample.bin","type":"Command","command":"cuckoo submit sample.bin"},
+                {"name":"cuckoo web runserver","type":"Command","command":"cuckoo web runserver"},
+                {"name":"# Use isolated networks for sandboxing","type":"Command","command":"# Use isolated networks for sandboxing"}
+              ]
+            }
+          ]
+        }
+      ]
+    }
+
+  ] /* end root children */
+};
+
+/* =========================
+   2) Helper: ensure there are exactly 50 distinct tools
+   (Our structure: 10 roles * 5 tools each = 50)
+   ========================= */
+
+/* =========================
+   3) D3-based rendering & interactions (REPLACEMENT)
+   ========================= */
+
+const width = Math.max(document.documentElement.clientWidth - 460, 900);
+const height = Math.max(document.documentElement.clientHeight - 220, 520);
+
+/* SVG / zoom layer */
+const svg = d3.select("#vizSVG")
+  .attr("width","100%")
+  .attr("height","100%")
+  .attr("viewBox", `0 0 ${Math.max(width,1200)} ${Math.max(height,800)}`)
+  .style("font-family", "Inter, Arial, sans-serif");
+
+// color palette
+const COLOR = {
+  "Root": "#00aaff",
+  "Role": "#00d4a6",
+  "Task": "#ffb64d",
+  "Tool": "#ff5c8a",
+  "Command": "#a45eff"
+};
+
+// set legend swatches safely
+try {
+  d3.select("#sw-role").style("background", COLOR.Role);
+  d3.select("#sw-task").style("background", COLOR.Task);
+  d3.select("#sw-tool").style("background", COLOR.Tool);
+  d3.select("#sw-cmd").style("background", COLOR.Command);
+} catch(e){ /* ignore if not present */ }
+
+/* zoom layer & groups */
+const zoomLayer = svg.append("g").attr("class","zoomLayer");
+const gLink = zoomLayer.append("g").attr("class","links");
+const gNode = zoomLayer.append("g").attr("class","nodes");
+
+/* zoom behavior */
+const zoom = d3.zoom()
+  .scaleExtent([0.35, 2.2])
+  .on("zoom", (event) => {
+    zoomLayer.attr("transform", event.transform);
+  });
+svg.call(zoom).on("dblclick.zoom", null);
+
+/* Build hierarchy (use your embedded DATA) */
+const root = d3.hierarchy(DATA, d => d.children);
+root.x0 = height / 2;
+root.y0 = 0;
+root.descendants().forEach((d,i) => d.id = i);
+
+/* collapse helper (used to start collapsed) */
+function collapse(d){
+  if(d.children){
+    d._children = d.children;
+    d._children.forEach(collapse);
+    d.children = null;
+  }
+}
+
+/* expand helper */
+function expand(d){
+  if(d._children){
+    d.children = d._children;
+    d._children = null;
+  }
+}
+
+/* initially collapse everything except root's immediate children collapsed? 
+   We'll collapse all children so user sees a tidy root with first-level roles visible.
+*/
+if(root.children){
+  root.children.forEach(collapse);
+}
+
+/* tree layout (horizontal) */
+const treeLayout = d3.tree().nodeSize([64, 220]);
+
+/* tooltip reference (existing element) */
+const tooltip = d3.select("#tooltip");
+
+/* currently selected node */
+let selectedNode = null;
+
+/* diagonal curve generator (cubic) */
+function diagonal(s, t){
+  return `M ${s.y} ${s.x}
+          C ${(s.y + t.y) / 2} ${s.x},
+            ${(s.y + t.y) / 2} ${t.x},
+            ${t.y} ${t.x}`;
+}
+
+/* helper colors/icons */
+function typeColor(type){ return COLOR[type] || "#6b7280"; }
+function iconFor(type){
+  switch(type){
+    case "Root": return "🌐";
+    case "Role": return "🛡️";
+    case "Task": return "⚙️";
+    case "Tool": return "🧰";
+    case "Command": return "⌁";
+    default: return "•";
+  }
+}
+
+/* wrap text for node labels */
+function wrapText(textSel, width){
+  textSel.each(function(){
+    const text = d3.select(this);
+    const words = text.text().split(/\s+/).reverse();
+    let word, line = [], lineNumber = 0, lineHeight = 1.1;
+    const x = +text.attr("x");
+    const y = +text.attr("y");
+    text.text(null);
+    let tspan = text.append("tspan").attr("x", x).attr("y", y).attr("dy","0em");
+    while(word = words.pop()){
+      line.push(word);
+      tspan.text(line.join(" "));
+      if(tspan.node().getComputedTextLength() > width){
+        line.pop();
+        tspan.text(line.join(" "));
+        line = [word];
+        tspan = text.append("tspan").attr("x", x).attr("y", y).attr("dy", ++lineNumber * lineHeight + "em").text(word);
+      }
+    }
+  });
+}
+
+/* Main render function (collapsible left-to-right tree) */
+function renderTree(source = root){
+  // compute layout
+  treeLayout(root);
+  const nodes = root.descendants();
+  const links = root.links();
+
+  // set horizontal spacing by depth
+  nodes.forEach(d => { d.y = d.depth * 220; });
+
+  // LINKS
+  const linkSel = gLink.selectAll("path.link")
+    .data(links, d => d.target.id);
+
+  const linkEnter = linkSel.enter()
+    .append("path")
+    .attr("class","link")
+    .attr("fill","none")
+    .attr("stroke","rgba(255,255,255,0.06)")
+    .attr("stroke-width",2)
+    .attr("d", d => diagonal(source, source));
+
+  linkSel.merge(linkEnter)
+    .transition().duration(300)
+    .attr("d", d => diagonal(d.source, d.target));
+
+  linkSel.exit().transition().duration(200).remove();
+
+  // NODES
+  const nodeSel = gNode.selectAll("g.node")
+    .data(nodes, d => d.id);
+
+  const nodeEnter = nodeSel.enter()
+    .append("g")
+    .attr("class","node")
+    .attr("transform", d => `translate(${source.y0},${source.x0})`)
+    .attr("tabindex", 0)
+    .attr("role","treeitem")
+    .on("click", (event, d) => { toggleNode(d); renderTree(d); showDetails(d); focusOnNode(d); })
+    .on("keydown", (event, d) => {
+      if(event.key === "Enter" || event.key === " "){
+        event.preventDefault(); toggleNode(d); renderTree(d); showDetails(d); focusOnNode(d);
+      }
+    })
+    .on("mouseover", (event,d) => showTooltip(event,d) )
+    .on("mouseout", hideTooltip)
+    .on("focus", (event,d) => showTooltip(event,d))
+    .on("blur", hideTooltip);
+
+  // circle (joint) visual
+  nodeEnter.append("circle")
+    .attr("r", 0)
+    .attr("fill", d => d._children ? d3.color(typeColor(d.data.type)).darker(0.5) : typeColor(d.data.type))
+    .attr("stroke", "rgba(255,255,255,0.95)")
+    .attr("stroke-width", 1);
+
+  // label
+  nodeEnter.append("text")
+    .attr("class","label")
+    .attr("x", d => d._children || d.children ? -18 : 18)
+    .attr("y", 4)
+    .attr("text-anchor", d => d._children || d.children ? "end" : "start")
+    .style("font-size","13px")
+    .style("font-weight","700")
+    .style("fill","#ffffff")
+    .text(d => `${iconFor(d.data.type)} ${d.data.name}`)
+    .call(wrapText, 160);
+
+  // merge + transitions
+  const nodeMerge = nodeEnter.merge(nodeSel);
+
+  nodeMerge.transition().duration(300)
+    .attr("transform", d => `translate(${d.y},${d.x})`);
+
+  nodeMerge.select("circle")
+    .transition().duration(300)
+    .attr("r", 8)
+    .attr("fill", d => d._children ? d3.color(typeColor(d.data.type)).darker(0.5) : typeColor(d.data.type));
+
+  nodeSel.exit().transition().duration(200).remove();
+
+  // store positions
+  nodes.forEach(d => { d.x0 = d.x; d.y0 = d.y; });
+
+  // update breadcrumbs
+  updateBreadcrumbs(selectedNode || root);
+}
+
+/* toggle node children */
+function toggleNode(d){
+  if(d.children){
+    d._children = d.children;
+    d.children = null;
+  } else {
+    d.children = d._children;
+    d._children = null;
+  }
+  selectedNode = d;
+}
+
+/* tooltip show/hide */
+function showTooltip(event, d){
+  tooltip.style("display","block")
+    .html(`<strong>${d.data.name}</strong><div style="font-size:12px;color:#a5b4c1">${d.data.type}${d.data.description ? ' — ' + d.data.description : ''}</div>`);
+  const [x,y] = d3.pointer(event, document.body);
+  tooltip.style("left", (x+12)+"px").style("top", (y+10)+"px");
+}
+function hideTooltip(){ tooltip.style("display","none"); }
+
+/* show details in right panel (keeps previous panel IDs) */
+function showDetails(d){
+  const title = document.getElementById("panelTitle");
+  const meta = document.getElementById("panelMeta");
+  const desc = document.getElementById("panelDesc");
+  const cmds = document.getElementById("panelCommands");
+  const links = document.getElementById("panelLinks");
+  const tags = document.getElementById("panelTags");
+
+  if(title) title.textContent = d.data.name;
+  if(meta) meta.innerHTML = `<strong>Type:</strong> ${d.data.type || '—'}`;
+  if(desc) desc.textContent = d.data.description || "";
+
+  if(cmds) {
+    cmds.innerHTML = "";
+    if(d.data.type === "Tool"){
+      const cmdsList = (d.data.children || []).filter(c => c.type === "Command" || c.data?.type === "Command" || c.data?.command).map(c => c.data?.command || c.data?.name || c.name || c);
+      if(cmdsList.length){
+        const heading = document.createElement("div"); heading.style.color = "var(--muted)"; heading.textContent = "Example Commands";
+        cmds.appendChild(heading);
+        cmdsList.forEach(cmdTxt => {
+          const pre = document.createElement("pre");
+          pre.textContent = cmdTxt;
+          pre.tabIndex = 0;
+          pre.style.background = "#041223";
+          pre.style.padding = "8px";
+          pre.style.borderRadius = "8px";
+          pre.style.color = "#9ee7c1";
+          pre.style.marginTop = "8px";
+          pre.addEventListener("click", ()=> navigator.clipboard && navigator.clipboard.writeText(pre.textContent));
+          cmds.appendChild(pre);
+        });
+      }
+    }
+  }
+
+  if(links){
+    links.innerHTML = "";
+    const resources = recommendResources(d.data);
+    resources.forEach(r => {
+      const a = document.createElement("a");
+      a.href = r.url; a.textContent = r.label; a.target="_blank"; a.rel="noopener noreferrer";
+      a.className = "link";
+      links.appendChild(a);
+    });
+  }
+
+  if(tags){
+    tags.innerHTML = "";
+    (d.data.tags || []).forEach(t=>{
+      const el = document.createElement("div");
+      el.className = "tag"; el.textContent = t;
+      tags.appendChild(el);
+    });
+  }
+}
+
+/* breadcrumbs update */
+function updateBreadcrumbs(node){
+  const holder = document.getElementById("breadcrumbs");
+  if(!holder) return;
+  holder.innerHTML = "";
+  const path = node ? node.ancestors().reverse() : root.ancestors().reverse();
+  path.forEach((n, idx) => {
+    const btn = document.createElement("button");
+    btn.textContent = (idx === 0 ? "🏠 " : "") + n.data.name;
+    btn.style.background = "transparent"; btn.style.border = "none"; btn.style.color = "#9dd3b6";
+    btn.addEventListener("click", ()=> { expandPathTo(n); renderTree(n); showDetails(n); });
+    holder.appendChild(btn);
+    if(idx < path.length-1){
+      const sep = document.createElement("span"); sep.textContent = "›"; sep.style.opacity = "0.6"; sep.style.margin = "0 6px";
+      holder.appendChild(sep);
+    }
+  });
+}
+
+/* expand parents of a node */
+function expandPathTo(n){
+  if(!n) return;
+  let cur = n;
+  while(cur.parent){
+    if(cur.parent._children) { cur.parent.children = cur.parent._children; cur.parent._children = null; }
+    cur = cur.parent;
+  }
+}
+
+/* focus/pan to keep node visible */
+function focusOnNode(d){
+  // compute transform to center d
+  const t = d3.zoomTransform(svg.node());
+  const desiredX = width / 3;
+  const desiredY = height / 2;
+  const dx = desiredX - (d.y * t.k + t.x);
+  const dy = desiredY - (d.x * t.k + t.y);
+  svg.transition().duration(600).call(zoom.translateBy, dx / t.k, dy / t.k);
+}
+
+/* searchNodes used by header search */
+function searchNodes(query){
+  query = (query || "").trim().toLowerCase();
+  if(!query){
+    // clear highlights
+    d3.selectAll("g.node circle").attr("stroke", "rgba(255,255,255,0.95)").attr("stroke-width",1);
+    return;
+  }
+  const matches = [];
+  root.each(d => {
+    if((d.data.name || "").toLowerCase().includes(query)) matches.push(d);
+  });
+  if(matches.length === 0) return;
+  // expand path to first match
+  expandPathTo(matches[0]);
+  renderTree(root);
+  // highlight matches visually
+  d3.selectAll("g.node circle").attr("stroke", d => matches.some(m=>m.id===d.id) ? "#00ffff" : "rgba(255,255,255,0.95)")
+    .attr("stroke-width", d => matches.some(m=>m.id===d.id) ? 3 : 1);
+  // focus on first match
+  focusOnNode(matches[0]);
+}
+
+/* Export visible subtree (selectedNode or root) */
+function exportJSON(node){
+  const n = node || selectedNode || root;
+  const subtree = cloneNode(n.data);
+  const blob = new Blob([JSON.stringify(subtree, null, 2)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a"); a.href = url;
+  a.download = `${(n.data.name||'subtree').replace(/\s+/g,'_')}.json`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+}
+
+/* clone utility */
+function cloneNode(data){ return JSON.parse(JSON.stringify(data)); }
+
+/* recommendResources (keeps previous mapping) */
+function recommendResources(data){
+  const name = (data.name || "").toLowerCase();
+  const list = [];
+  const mapping = {
+    "nmap":"https://nmap.org/","masscan":"https://github.com/robertdavidgraham/masscan",
+    "nikto":"https://cirt.net/Nikto2","metasploit":"https://www.metasploit.com/",
+    "ncat":"https://nmap.org/ncat/","volatility":"https://www.volatilityfoundation.org/",
+    "sleuthkit":"https://www.sleuthkit.org/","autopsy":"https://www.sleuthkit.org/autopsy/",
+    "yara":"https://virustotal.github.io/yara/","splunk":"https://www.splunk.com/",
+    "osquery":"https://osquery.io/","zeek":"https://zeek.org/","suricata":"https://suricata.io/",
+    "amass":"https://github.com/OWASP/Amass","sublist3r":"https://github.com/aboul3la/Sublist3r",
+    "sqlmap":"http://sqlmap.org/","burp-suite":"https://portswigger.net/burp","gobuster":"https://github.com/OJ/gobuster",
+    "dirb":"https://github.com/v0re/dirb","aws-cli":"https://aws.amazon.com/cli/","gcloud":"https://cloud.google.com/sdk",
+    "kubectl":"https://kubernetes.io/docs/reference/kubectl/","terraform":"https://www.terraform.io/","john":"https://www.openwall.com/john/",
+    "hashcat":"https://hashcat.net/hashcat/","impacket":"https://github.com/SecureAuthCorp/impacket","git":"https://git-scm.com/doc",
+    "docker":"https://docs.docker.com/","openvas":"https://www.greenbone.net/en/oss/","cuckoo":"https://cuckoosandbox.org/"
+  };
+  Object.keys(mapping).forEach(k=>{ if(name.includes(k)) list.push({label:mapping[k], url:mapping[k]}); });
+  if(list.length === 0) list.push({label:"Official docs & learning resources", url:"https://owasp.org/"});
+  return list;
+}
+
+/* =========================
+   End D3 section — now connect header UI (search, filter, export, help)
+   ========================= */
+
+/* Hook up header controls safely (search, filter, export, help modal) */
+(function hookupHeader(){
+  // Search box
+  const searchInput = document.getElementById("search");
+  if(searchInput){
+    let timer = null;
+    searchInput.addEventListener("input", (e)=>{
+      clearTimeout(timer);
+      timer = setTimeout(()=> searchNodes(e.target.value), 250);
+    });
+    searchInput.addEventListener("keydown",(e)=> { if(e.key === "Escape"){ e.target.value=""; searchNodes(""); }});
+  }
+
+  // Populate role filter dropdown
+  const roleFilter = document.getElementById("roleFilter");
+  if(roleFilter){
+    // clear existing but keep first "all"
+    const existing = roleFilter.querySelectorAll("option");
+    if(existing.length <= 1){
+      // populate
+      (root.children || []).forEach(c => {
+        const opt = document.createElement("option");
+        opt.value = c.data.name; opt.textContent = c.data.name;
+        roleFilter.appendChild(opt);
+      });
+    }
+    roleFilter.addEventListener("change", (e)=>{
+      const v = e.target.value;
+      if(v === "all" || v === "All roles"){
+        // collapse everything except root
+        root.children && root.children.forEach(collapse);
+        renderTree(root);
+        centerTree();
+        return;
+      }
+      // collapse all then expand target role
+      root.children && root.children.forEach(collapse);
+      const node = (root.children || []).find(c => c.data.name === v);
+      if(node){
+        // expand that node and ensure its first-level children visible
+        expand(node);
+        renderTree(node);
+        expandPathTo(node);
+        showDetails(node);
+        focusOnNode(node);
+      }
+    });
+  }
+
+  // Export
+  const exportBtn = document.getElementById("exportBtn");
+  if(exportBtn){
+    exportBtn.addEventListener("click", ()=> exportJSON(selectedNode || root));
+  }
+
+  // Help modal open/close
+  const helpBtn = document.getElementById("helpBtn");
+  const helpModal = document.getElementById("helpModal");
+  const closeHelp = document.getElementById("closeHelp");
+  if(helpBtn && helpModal){
+    helpBtn.addEventListener("click", ()=> { helpModal.style.display = "block"; helpModal.setAttribute("aria-hidden","false"); });
+  }
+  if(closeHelp){
+    closeHelp.addEventListener("click", ()=> { helpModal.style.display = "none"; helpModal.setAttribute("aria-hidden","true"); });
+  }
+
+  // Panel toggle (detailsPanel exists in your HTML)
+  const togglePanelBtn = document.getElementById("togglePanel");
+  const detailsPanel = document.getElementById("detailsPanel");
+  if(togglePanelBtn && detailsPanel){
+    togglePanelBtn.addEventListener("click", ()=>{
+      if(detailsPanel.classList.contains("collapsed")){ detailsPanel.classList.remove("collapsed"); togglePanelBtn.setAttribute("aria-pressed","false"); }
+      else { detailsPanel.classList.add("collapsed"); togglePanelBtn.setAttribute("aria-pressed","true"); }
+    });
+  }
+})();
+
+/* centerTree and initial render */
+function centerTree(){
+  svg.transition().duration(700).call(zoom.transform, d3.zoomIdentity.translate(120, height/2).scale(0.9));
+}
+
+renderTree(root);
+centerTree();
+
+/* END REPLACEMENT SECTION */
+
+
+/* =========================
+   4) Hook up UI controls: search, filter, export, help modal
+   ========================= */
+const searchInput = document.getElementById("search");
+let searchTimer = null;
+searchInput.addEventListener("input", (e)=>{
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(()=> searchNodes(e.target.value), 250);
+});
+searchInput.addEventListener("keydown",(e)=>{
+  if(e.key === "Escape"){ e.target.value=""; searchNodes(""); }
+});
+
+const roleFilter = document.getElementById("roleFilter");
+// populate role filter options from top-level roles
+const roleNames = root.children ? root.children.map(c => c.data.name) : [];
+roleNames.forEach(r=>{
+  const opt = document.createElement("option");
+  opt.value = r; opt.textContent = r;
+  roleFilter.appendChild(opt);
+});
+roleFilter.addEventListener("change",(e)=>{
+  const v = e.target.value;
+  if(v === "all"){
+    // expand root and collapse others
+    collapseAll();
+    renderTree(root);
+    return;
+  }
+  // collapse all then expand the specified role
+  collapseAll();
+  const node = root.children.find(c => c.data.name === v);
+  if(node){
+    if(node._children) { node.children = node._children; node._children = null; }
+    // also expand its first child
+    if(node.children) node.children.forEach(c => { if(c._children){ c.children = c._children; c._children = null; } });
+    renderTree(node);
+    // focus
+    expandTo(node.id);
+    showDetails(node);
+  }
+});
+
+document.getElementById("exportBtn").addEventListener("click", ()=>{
+  exportJSON(selectedNode);
+});
+
+/* Help modal interactions */
+const helpModal = document.getElementById("helpModal");
+document.getElementById("helpBtn").addEventListener("click", ()=>{
+  helpModal.style.display = "block";
+  helpModal.setAttribute("aria-hidden","false");
+  document.getElementById("closeHelp").focus();
+});
+document.getElementById("closeHelp").addEventListener("click", ()=>{
+  helpModal.style.display = "none";
+  helpModal.setAttribute("aria-hidden","true");
+  document.getElementById("helpBtn").focus();
+});
+
+/* Panel toggle */
+const detailsPanel = document.getElementById("detailsPanel");
+document.getElementById("togglePanel").addEventListener("click", (e)=>{
+  const btn = e.currentTarget;
+  if(detailsPanel.classList.contains("collapsed")){
+    detailsPanel.classList.remove("collapsed");
+    btn.setAttribute("aria-pressed","false");
+  } else {
+    detailsPanel.classList.add("collapsed");
+    btn.setAttribute("aria-pressed","true");
+  }
+});
+
+/* Global keyboard shortcuts for accessibility */
+document.addEventListener("keydown",(e)=>{
+  if(e.key === "?" && e.shiftKey){ // Shift+? opens help
+    helpModal.style.display="block"; helpModal.setAttribute("aria-hidden","false");
+  }
+  if(e.key === "Escape"){
+    helpModal.style.display="none"; helpModal.setAttribute("aria-hidden","true");
+  }
+});
+
+/* =========================
+   Utility: show initial details (root)
+   ========================= */
+showDetails(root);
+
+/* =========================
+   Additional Notes:
+   - To edit the dataset, modify the DATA object at top of the script.
+   - Each node supports these properties: name, type, description, tags (array), children (array).
+   - Commands are nodes with type "Command" and a "command" string.
+   - The page is intentionally self-contained for offline use.
+   ========================= */
+
+</script>
+</body>
+</html>

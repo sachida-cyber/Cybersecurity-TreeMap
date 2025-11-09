@@ -968,77 +968,260 @@ const DATA = {
   ]
 },
 
-    /* --------------------- ROLE: Forensics --------------------- */
+/* --------------------- ROLE: Forensics (2025 Advanced) --------------------- */
+{
+  "name": "Forensics",
+  "type": "Role",
+  "description": "Digital forensics analysts perform acquisition, preservation, and analysis of digital evidence from multiple environments — endpoint, cloud, and network — to support incident response and legal proceedings.",
+  "tags": ["forensics", "evidence", "ir", "memory", "disk", "malware"],
+  "children": [
+
+    /* 1️⃣ EVENT: Disk Imaging & Acquisition */
     {
-      "name":"Forensics",
-      "type":"Role",
-      "description":"Digital forensics teams that perform evidence collection and analysis.",
-      "tags":["forensics","evidence"],
-      "children":[
+      "name": "Disk Imaging & Acquisition",
+      "type": "Event",
+      "description": "Creating bit-by-bit forensic images while ensuring data integrity.",
+      "children": [
         {
-          "name":"Disk & Memory Analysis",
-          "type":"Task",
-          "description":"Acquiring and analyzing disk and memory artifacts for investigations.",
-          "children":[
-            {
-              "name":"dcfldd",
-              "type":"Tool",
-              "description":"Forensic-grade imaging tool for disk acquisition (use write-blockers and proper chain-of-custody).",
-              "tags":["imaging","forensics"],
-              "children":[
-                {"name":"dcfldd if=/dev/sda of=/evidence/disk.img hash=sha256","type":"Command","command":"dcfldd if=/dev/sda of=/evidence/disk.img hash=sha256"},
-                {"name":"dcfldd --help","type":"Command","command":"dcfldd --help"},
-                {"name":"dcfldd if=image.dd of=copy.dd conv=noerror","type":"Command","command":"dcfldd if=image.dd of=copy.dd conv=noerror"}
-              ]
-            },
-            {
-              "name":"afflib",
-              "type":"Tool",
-              "description":"Advanced Forensics Format (AFF) toolkit for handling forensic images.",
-              "tags":["forensics","image"],
-              "children":[
-                {"name":"affconvert image.raw image.aff","type":"Command","command":"affconvert image.raw image.aff"},
-                {"name":"afinfo image.aff","type":"Command","command":"afinfo image.aff"},
-                {"name":"# Use AFF for robust metadata preservation","type":"Command","command":"# Use AFF for robust metadata preservation"}
-              ]
-            },
-            {
-              "name":"hashdeep",
-              "type":"Tool",
-              "description":"Hashing toolkit for verifying evidence integrity across datasets.",
-              "tags":["integrity"],
-              "children":[
-                {"name":"hashdeep -r -l manifest.txt evidence/","type":"Command","command":"hashdeep -r -l manifest.txt evidence/"},
-                {"name":"hashdeep -vv file.bin","type":"Command","command":"hashdeep -vv file.bin"},
-                {"name":"# Use checksums to verify copies","type":"Command","command":"# Use checksums to verify copies"}
-              ]
-            },
-            {
-              "name":"volatility-plugins",
-              "type":"Tool",
-              "description":"Supplemental plugins for advanced memory analysis scenarios.",
-              "tags":["memory"],
-              "children":[
-                {"name":"volatility -f memdump.raw pslist","type":"Command","command":"volatility -f memdump.raw pslist"},
-                {"name":"volatility -f mem.raw connscan","type":"Command","command":"volatility -f mem.raw connscan"},
-                {"name":"# Refer to volatility docs for plugin usage","type":"Command","command":"# Refer to volatility docs for plugin usage"}
-              ]
-            },
-            {
-              "name":"bulk_extractor",
-              "type":"Tool",
-              "description":"Scans disk images for artifacts like URLs, emails and other artifacts.",
-              "tags":["artifact","scan"],
-              "children":[
-                {"name":"bulk_extractor -o out/ disk.img","type":"Command","command":"bulk_extractor -o out/ disk.img"},
-                {"name":"# Review reports in the output directory","type":"Command","command":"# Review reports in the output directory"},
-                {"name":"bulk_extractor -V","type":"Command","command":"bulk_extractor -V"}
-              ]
-            }
+          "name": "dcfldd",
+          "type": "Tool",
+          "description": "Enhanced dd with hashing support for forensic disk imaging.",
+          "tags": ["disk", "imaging"],
+          "children": [
+            {"name": "Acquire disk image", "type": "Command", "command": "dcfldd if=/dev/sda of=/cases/disk.img hash=sha256", "use_info": "Creates a forensic image of /dev/sda while calculating SHA-256 hash for verification."},
+            {"name": "Clone evidence drive", "type": "Command", "command": "dcfldd if=/dev/sdb of=/dev/sdc conv=noerror,sync", "use_info": "Duplicates evidence drive with error handling for physical damages."},
+            {"name": "Verify hash integrity", "type": "Command", "command": "sha256sum /cases/disk.img", "use_info": "Ensures acquired image matches original drive hash."}
+          ]
+        },
+        {
+          "name": "Guymager",
+          "type": "Tool",
+          "description": "GUI-based forensic imaging tool with multi-threaded hashing.",
+          "children": [
+            {"name": "Start acquisition GUI", "type": "Command", "command": "guymager", "use_info": "Launches graphical interface for imaging and metadata recording."},
+            {"name": "Auto-verify images", "type": "Command", "command": "guymager --verify /cases/disk.img", "use_info": "Performs post-acquisition verification of forensic images."}
           ]
         }
       ]
     },
+
+    /* 2️⃣ EVENT: Memory Acquisition & Analysis */
+    {
+      "name": "Memory Acquisition & Analysis",
+      "type": "Event",
+      "description": "Capturing volatile memory and analyzing running processes and network activity.",
+      "children": [
+        {
+          "name": "WinPmem",
+          "type": "Tool",
+          "description": "Memory acquisition tool for Windows systems.",
+          "children": [
+            {"name": "Acquire RAM dump", "type": "Command", "command": "winpmem.exe --output memdump.raw", "use_info": "Captures full volatile memory image from Windows."},
+            {"name": "Verify dump hash", "type": "Command", "command": "certutil -hashfile memdump.raw SHA256", "use_info": "Validates memory image integrity post-acquisition."}
+          ]
+        },
+        {
+          "name": "Volatility3",
+          "type": "Tool",
+          "description": "Framework for analyzing volatile memory dumps.",
+          "children": [
+            {"name": "List processes", "type": "Command", "command": "vol.py -f memdump.raw windows.pslist", "use_info": "Lists all active processes in memory image."},
+            {"name": "Detect hidden processes", "type": "Command", "command": "vol.py -f memdump.raw windows.psscan", "use_info": "Finds injected or terminated-but-resident processes."},
+            {"name": "Analyze network sockets", "type": "Command", "command": "vol.py -f memdump.raw windows.netscan", "use_info": "Lists open TCP/UDP connections found in memory."},
+            {"name": "Dump suspicious process", "type": "Command", "command": "vol.py -f memdump.raw windows.memmap --pid 1234 -D ./dump/", "use_info": "Extracts the memory space of a suspicious process for malware analysis."}
+          ]
+        }
+      ]
+    },
+
+    /* 3️⃣ EVENT: File System Analysis */
+    {
+      "name": "File System Analysis",
+      "type": "Event",
+      "description": "Examining files, metadata, and deleted entries from disk images.",
+      "children": [
+        {
+          "name": "The Sleuth Kit (TSK)",
+          "type": "Tool",
+          "description": "Comprehensive set of forensic tools for file system analysis.",
+          "children": [
+            {"name": "List partitions", "type": "Command", "command": "mmls disk.img", "use_info": "Displays partition layout of a forensic image."},
+            {"name": "List directory", "type": "Command", "command": "fls -r -m / disk.img > files.txt", "use_info": "Recursively lists all files and directories."},
+            {"name": "Extract file by inode", "type": "Command", "command": "icat disk.img 128 > suspect.docx", "use_info": "Extracts a file using its inode number."}
+          ]
+        },
+        {
+          "name": "Autopsy",
+          "type": "Tool",
+          "description": "GUI forensic suite built on top of TSK for timeline and artifact analysis.",
+          "children": [
+            {"name": "Launch autopsy server", "type": "Command", "command": "autopsy", "use_info": "Starts web-based forensic analysis environment."},
+            {"name": "Add case evidence", "type": "Command", "command": "autopsy --add /cases/disk.img", "use_info": "Imports disk image into Autopsy for timeline analysis."}
+          ]
+        }
+      ]
+    },
+
+    /* 4️⃣ EVENT: Malware Analysis */
+    {
+      "name": "Malware Analysis",
+      "type": "Event",
+      "description": "Identifying and reverse-engineering malicious executables found on systems.",
+      "children": [
+        {
+          "name": "YARA",
+          "type": "Tool",
+          "description": "Pattern-matching tool for malware identification.",
+          "children": [
+            {"name": "Scan directory", "type": "Command", "command": "yara -r rules.yar /samples/", "use_info": "Recursively scans all samples using predefined YARA rules."},
+            {"name": "Test rule", "type": "Command", "command": "yara -s detect_trojans.yar sample.exe", "use_info": "Detects known malware patterns in executables."}
+          ]
+        },
+        {
+          "name": "Ghidra",
+          "type": "Tool",
+          "description": "Reverse-engineering framework for binary analysis.",
+          "children": [
+            {"name": "Launch GUI", "type": "Command", "command": "ghidraRun", "use_info": "Opens Ghidra interface for static malware analysis."},
+            {"name": "Import binary", "type": "Command", "command": "File > Import > sample.exe", "use_info": "Disassemble executable to view code flow and API calls."}
+          ]
+        }
+      ]
+    },
+
+    /* 5️⃣ EVENT: Log Correlation & Analysis */
+    {
+      "name": "Log Correlation & Analysis",
+      "type": "Event",
+      "description": "Analyzing and correlating logs across systems to trace attacker behavior.",
+      "children": [
+        {
+          "name": "grep",
+          "type": "Tool",
+          "description": "Text search utility for filtering log data.",
+          "children": [
+            {"name": "Search auth logs", "type": "Command", "command": "grep -i 'failed' /var/log/auth.log", "use_info": "Identify failed authentication attempts."},
+            {"name": "Search malware mentions", "type": "Command", "command": "zgrep 'malware' /logs/*.gz", "use_info": "Scan compressed logs for malware indicators."}
+          ]
+        },
+        {
+          "name": "jq",
+          "type": "Tool",
+          "description": "JSON processor for log filtering and enrichment.",
+          "children": [
+            {"name": "Extract IPs from JSON logs", "type": "Command", "command": "jq '.src_ip' events.json | sort | uniq", "use_info": "Parses source IPs from structured logs."},
+            {"name": "Filter by severity", "type": "Command", "command": "jq '.[] | select(.severity==\"critical\")' alerts.json", "use_info": "Focuses on high-severity events for triage."}
+          ]
+        }
+      ]
+    },
+
+    /* 6️⃣ EVENT: Email Forensics */
+    {
+      "name": "Email Forensics",
+      "type": "Event",
+      "description": "Analyzing phishing and compromised email headers and attachments.",
+      "children": [
+        {
+          "name": "exiftool",
+          "type": "Tool",
+          "description": "Metadata extractor for files, including email attachments.",
+          "children": [
+            {"name": "Extract metadata", "type": "Command", "command": "exiftool suspect.docx", "use_info": "Retrieves embedded metadata for author and timestamps."}
+          ]
+        },
+        {
+          "name": "mailsniffer",
+          "type": "Tool",
+          "description": "Analyzes email headers and attachments for phishing indicators.",
+          "children": [
+            {"name": "Scan eml file", "type": "Command", "command": "mailsniffer -f phishing.eml", "use_info": "Detects spoofed headers and malicious URLs."}
+          ]
+        }
+      ]
+    },
+
+    /* 7️⃣ EVENT: Timeline Reconstruction */
+    {
+      "name": "Timeline Reconstruction",
+      "type": "Event",
+      "description": "Building a forensic timeline of attacker activities.",
+      "children": [
+        {
+          "name": "log2timeline",
+          "type": "Tool",
+          "description": "Parses multiple evidence sources into a unified forensic timeline.",
+          "children": [
+            {"name": "Generate timeline", "type": "Command", "command": "log2timeline.py timeline.plaso /evidence/", "use_info": "Creates timeline from multiple system artifacts."},
+            {"name": "View timeline", "type": "Command", "command": "psort.py -o l2tcsv timeline.plaso > timeline.csv", "use_info": "Exports readable CSV version of forensic timeline."}
+          ]
+        }
+      ]
+    },
+
+    /* 8️⃣ EVENT: Network Artifact Analysis */
+    {
+      "name": "Network Artifact Analysis",
+      "type": "Event",
+      "description": "Investigating pcap files and network evidence for lateral movement or exfiltration.",
+      "children": [
+        {
+          "name": "Wireshark",
+          "type": "Tool",
+          "description": "GUI network protocol analyzer for deep inspection.",
+          "children": [
+            {"name": "Open capture", "type": "Command", "command": "wireshark evidence.pcap", "use_info": "Visually inspect packets and protocols in GUI."},
+            {"name": "Filter HTTP traffic", "type": "Command", "command": "tshark -r evidence.pcap -Y 'http'", "use_info": "CLI filter for HTTP sessions."}
+          ]
+        }
+      ]
+    },
+
+    /* 9️⃣ EVENT: Cloud Forensics */
+    {
+      "name": "Cloud Forensics",
+      "type": "Event",
+      "description": "Collecting and analyzing cloud artifacts from AWS, Azure, and GCP.",
+      "children": [
+        {
+          "name": "AWS CLI",
+          "type": "Tool",
+          "description": "Command-line interface to interact with AWS resources for evidence retrieval.",
+          "children": [
+            {"name": "List CloudTrail logs", "type": "Command", "command": "aws cloudtrail describe-trails", "use_info": "Identify logging setup for AWS account."},
+            {"name": "Download events", "type": "Command", "command": "aws s3 cp s3://cloudtrail/logs/ ./", "use_info": "Retrieve logs for offline forensic analysis."}
+          ]
+        }
+      ]
+    },
+
+    /* 🔟 EVENT: Automation & Reporting */
+    {
+      "name": "Automation & Reporting",
+      "type": "Event",
+      "description": "Streamlining forensic workflows and report generation.",
+      "children": [
+        {
+          "name": "Python",
+          "type": "Tool",
+          "description": "Scripting language for automating evidence parsing.",
+          "children": [
+            {"name": "Parse JSON logs", "type": "Command", "command": "python3 parser.py logs.json", "use_info": "Custom parser to automate log extraction."},
+            {"name": "Generate hash report", "type": "Command", "command": "python3 hash_report.py evidence/", "use_info": "Auto-generates hash verification reports."}
+          ]
+        },
+        {
+          "name": "Jupyter Notebook",
+          "type": "Tool",
+          "description": "Interactive analysis and reporting environment for forensic data.",
+          "children": [
+            {"name": "Launch Jupyter", "type": "Command", "command": "jupyter notebook", "use_info": "Open notebooks for timeline visualization and reporting."}
+          ]
+        }
+      ]
+    }
+  ]
+},
 
     /* --------------------- ROLE: Threat Intelligence --------------------- */
     {

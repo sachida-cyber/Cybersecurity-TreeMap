@@ -679,76 +679,225 @@ const DATA = {
     },
 
     /* --------------------- ROLE: SOC Analyst --------------------- */
+{
+  "name": "SOC Analyst",
+  "type": "Role",
+  "description": "Security Operations Center analysts detect, investigate, and respond to cyber incidents using logs, alerts, and threat intelligence.",
+  "tags": ["monitoring", "triage", "response", "threat-hunting"],
+  "children": [
     {
-      "name":"SOC Analyst",
-      "type":"Role",
-      "description":"Analysts who triage alerts and escalate incidents from monitoring systems.",
-      "tags":["monitoring","triage"],
-      "children":[
+      "name": "Event Monitoring & Detection",
+      "type": "Event",
+      "description": "Continuous observation of systems and alerts for anomalies or suspicious behavior.",
+      "children": [
         {
-          "name":"Alert Triage",
-          "type":"Task",
-          "description":"Process alerts, enrich events and escalate as needed.",
-          "children":[
+          "name": "Alert Triage",
+          "type": "Task",
+          "description": "Process and validate alerts from SIEM, filter false positives, and prioritize threats.",
+          "children": [
             {
-              "name":"jq",
-              "type":"Tool",
-              "description":"JSON processor used to parse and filter logs in pipelines.",
-              "tags":["utility","parsing"],
-              "children":[
-                {"name":"cat events.json | jq .[] | jq '.user, .event'","type":"Command","command":"cat events.json | jq .[] | jq '.user, .event'"},
-                {"name":"jq '.[] | select(.level==\"error\")' logs.json","type":"Command","command":"jq '.[] | select(.level==\"error\")' logs.json"},
-                {"name":"jq --help","type":"Command","command":"jq --help"}
+              "name": "Splunk",
+              "type": "Tool",
+              "description": "SIEM platform to collect and analyze security logs from multiple sources in real time.",
+              "tags": ["SIEM", "log-analysis"],
+              "children": [
+                {
+                  "name": "Search Failed Logins",
+                  "type": "Command",
+                  "command": "index=security sourcetype=auth action=failure | stats count by user, src_ip",
+                  "use_info": "Identify brute force attempts or compromised accounts in Splunk."
+                },
+                {
+                  "name": "Correlate DNS + Proxy Logs",
+                  "type": "Command",
+                  "command": "index=dns OR index=proxy | stats count by domain, src_ip",
+                  "use_info": "Correlates network activity to detect data exfiltration patterns."
+                },
+                {
+                  "name": "Monitor Suspicious PowerShell Use",
+                  "type": "Command",
+                  "command": "index=windows EventCode=4104 OR EventCode=4103 | table _time, user, ScriptBlockText",
+                  "use_info": "Hunts for malicious PowerShell execution in Windows endpoints."
+                }
               ]
             },
             {
-              "name":"tcpdump",
-              "type":"Tool",
-              "description":"Packet capture tool for network troubleshooting and incident validation.",
-              "tags":["network","capture"],
-              "children":[
-                {"name":"tcpdump -i any -w capture.pcap","type":"Command","command":"tcpdump -i any -w capture.pcap"},
-                {"name":"tcpdump -r capture.pcap -nn","type":"Command","command":"tcpdump -r capture.pcap -nn"},
-                {"name":"tcpdump -i eth0 port 80","type":"Command","command":"tcpdump -i eth0 port 80"}
+              "name": "ELK Stack (Elasticsearch, Logstash, Kibana)",
+              "type": "Tool",
+              "description": "Open-source log analytics suite for SOC dashboards and correlation.",
+              "tags": ["log-management", "SIEM"],
+              "children": [
+                {
+                  "name": "Elasticsearch Query for Errors",
+                  "type": "Command",
+                  "command": "GET /logs/_search?q=level:error",
+                  "use_info": "Quickly filters error-level events from system logs."
+                },
+                {
+                  "name": "Kibana Visualization Setup",
+                  "type": "Command",
+                  "command": "Create dashboard: CPU usage vs Error Events",
+                  "use_info": "Visualize CPU anomalies correlating with security events."
+                }
               ]
             },
             {
-              "name":"wireshark",
-              "type":"Tool",
-              "description":"GUI packet analysis tool for detailed inspection of captures (use offline copies).",
-              "tags":["analysis","gui"],
-              "children":[
-                {"name":"wireshark capture.pcap","type":"Command","command":"wireshark capture.pcap"},
-                {"name":"tshark -r capture.pcap -Y 'http' -T fields -e http.host","type":"Command","command":"tshark -r capture.pcap -Y 'http' -T fields -e http.host"},
-                {"name":"wireshark --help","type":"Command","command":"wireshark --help"}
+              "name": "tcpdump",
+              "type": "Tool",
+              "description": "Packet capture utility for network traffic inspection.",
+              "children": [
+                {
+                  "name": "Capture All Traffic",
+                  "type": "Command",
+                  "command": "tcpdump -i any -w capture.pcap",
+                  "use_info": "Records all packets on available interfaces for later deep analysis."
+                },
+                {
+                  "name": "Filter HTTP Traffic",
+                  "type": "Command",
+                  "command": "tcpdump -i eth0 port 80",
+                  "use_info": "Focuses on cleartext web traffic during compromise detection."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Threat Detection",
+          "type": "Task",
+          "description": "Identify Indicators of Compromise (IOCs) and suspicious patterns in logs or network flows.",
+          "children": [
+            {
+              "name": "Suricata",
+              "type": "Tool",
+              "description": "Network IDS/IPS engine for deep packet inspection and rule-based detection.",
+              "tags": ["IDS", "IPS", "network-security"],
+              "children": [
+                {
+                  "name": "Run Suricata in Live Mode",
+                  "type": "Command",
+                  "command": "suricata -c /etc/suricata/suricata.yaml -i eth0",
+                  "use_info": "Enables packet analysis and alerts based on signatures."
+                },
+                {
+                  "name": "Analyze Eve JSON Logs",
+                  "type": "Command",
+                  "command": "jq '.alert.signature' /var/log/suricata/eve.json | sort | uniq -c",
+                  "use_info": "Aggregates unique Suricata alerts to detect recurring attack patterns."
+                }
               ]
             },
             {
-              "name":"grep",
-              "type":"Tool",
-              "description":"Classic text search; used heavily in log triage and quick investigations.",
-              "tags":["utility","parsing"],
-              "children":[
-                {"name":"grep -i 'failed login' /var/log/auth.log","type":"Command","command":"grep -i 'failed login' /var/log/auth.log"},
-                {"name":"zgrep 'malware' *.gz","type":"Command","command":"zgrep 'malware' *.gz"},
-                {"name":"grep -R --line-number 'username' /srv/logs","type":"Command","command":"grep -R --line-number 'username' /srv/logs"}
-              ]
-            },
-            {
-              "name":"jqplay",
-              "type":"Tool",
-              "description":"(Aux) helper scripts for JSON enrichment and parsing in SOC workflows.",
-              "tags":["utility"],
-              "children":[
-                {"name":"./enrich.sh events.json > enriched.json","type":"Command","command":"./enrich.sh events.json > enriched.json"},
-                {"name":"python3 parser.py logs.json","type":"Command","command":"python3 parser.py logs.json"},
-                {"name":"# Always sanitize PII when sharing","type":"Command","command":"# Always sanitize PII when sharing"}
+              "name": "Zeek (Bro)",
+              "type": "Tool",
+              "description": "Network analysis framework for traffic logging and behavioral analysis.",
+              "children": [
+                {
+                  "name": "Run Zeek Capture",
+                  "type": "Command",
+                  "command": "zeek -i eth0 local",
+                  "use_info": "Generates detailed log files for HTTP, DNS, SSL, and connection behaviors."
+                },
+                {
+                  "name": "Extract Domains from DNS Logs",
+                  "type": "Command",
+                  "command": "cut -f9 dns.log | sort | uniq -c | sort -nr",
+                  "use_info": "Finds frequently queried domains — useful for spotting C2 traffic."
+                }
               ]
             }
           ]
         }
       ]
     },
+    {
+      "name": "Incident Response",
+      "type": "Event",
+      "description": "Response chain after validation of true positive incidents.",
+      "children": [
+        {
+          "name": "Containment & Forensics",
+          "type": "Task",
+          "description": "Limit the impact of compromise and gather forensic artifacts.",
+          "children": [
+            {
+              "name": "Volatility",
+              "type": "Tool",
+              "description": "Memory forensics framework for analyzing RAM dumps.",
+              "tags": ["forensics", "memory-analysis"],
+              "children": [
+                {
+                  "name": "List Processes",
+                  "type": "Command",
+                  "command": "volatility -f memdump.raw --profile=Win10x64 pslist",
+                  "use_info": "Enumerates running processes from memory image."
+                },
+                {
+                  "name": "Dump Suspicious Process",
+                  "type": "Command",
+                  "command": "volatility -f memdump.raw --profile=Win10x64 procdump -p 1234 -D ./output/",
+                  "use_info": "Extracts process memory for malware analysis."
+                }
+              ]
+            },
+            {
+              "name": "FTK Imager",
+              "type": "Tool",
+              "description": "Disk imaging and file recovery tool used during forensic evidence collection.",
+              "children": [
+                {
+                  "name": "Acquire Disk Image",
+                  "type": "Command",
+                  "command": "ftkimager.exe C: evidence.E01",
+                  "use_info": "Creates bit-for-bit forensic copy of the target drive."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Threat Intelligence Correlation",
+          "type": "Task",
+          "description": "Enrich indicators with external threat feeds to determine severity and attribution.",
+          "children": [
+            {
+              "name": "MISP",
+              "type": "Tool",
+              "description": "Malware Information Sharing Platform to correlate and share IOCs.",
+              "children": [
+                {
+                  "name": "Search Indicator",
+                  "type": "Command",
+                  "command": "misp-search --type=domain example.com",
+                  "use_info": "Checks if domain is listed in threat feeds or campaigns."
+                },
+                {
+                  "name": "Add New IOC",
+                  "type": "Command",
+                  "command": "misp-add --type=ip --value=45.13.12.5 --category=Network activity",
+                  "use_info": "Share newly found IP IOCs with trusted peers."
+                }
+              ]
+            },
+            {
+              "name": "Sigma Rules",
+              "type": "Tool",
+              "description": "Generic rule format to detect malicious behavior across SIEMs.",
+              "children": [
+                {
+                  "name": "Convert Sigma to Splunk Query",
+                  "type": "Command",
+                  "command": "sigmac -t splunk sigma_rule.yml",
+                  "use_info": "Translate Sigma rules into SIEM-native queries for correlation."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+},
 
     /* --------------------- ROLE: Forensics --------------------- */
     {

@@ -244,255 +244,367 @@ const DATA = {
   "type": "Root",
   "description": "Overview of cybersecurity roles, tasks, tools, and example commands. For learning and authorized testing only.",
   "children": [
-    /* For each role we include 2-3 tasks, each task will have some tools (5 tools per role total),
-       and each tool will have 3-6 child nodes of type Command.
-       We distribute exactly 50 distinct tools across 10 roles (5 tools each). */
+
     /* --------------------- ROLE: Red Team --------------------- */
     {
       "name": "Red Team",
       "type": "Role",
-      "description": "Offensive security team focused on emulating adversaries to test defenses.",
-      "tags":["offense","adversary-emulation"],
+      "description": "Simulated offensive security operations performed to improve organizational defenses. All activities are for authorized testing and education only.",
+      "tags": ["redteam","offensive","ethical-hacking"],
       "children": [
         {
-          "name":"External Pen Test",
-          "type":"Task",
-          "description":"Authorized external penetration testing against public-facing assets.",
+          "name": "Reconnaissance",
+          "type": "Task",
+          "description": "Collect open information about a target before active engagement.",
+          "children": [
+            {
+              "name": "Nmap",
+              "type": "Tool",
+              "description": "Powerful network mapper used for host discovery and port scanning.",
+              "tags": ["network","scanner"],
+              "children": [
+                {
+                  "name": "nmap -sn 192.168.1.0/24",
+                  "type": "Command",
+                  "command": "nmap -sn 192.168.1.0/24  # Ping sweep for live hosts"
+                },
+                {
+                  "name": "nmap -A -p- target.com",
+                  "type": "Command",
+                  "command": "nmap -A -p- target.com  # Full port + service detection"
+                },
+                {
+                  "name": "nmap --script vuln target.com",
+                  "type": "Command",
+                  "command": "nmap --script vuln target.com  # Run vulnerability scripts"
+                },
+                {
+                  "name": "# Use only on assets authorized for testing",
+                  "type": "Command",
+                  "command": "# Use only on assets authorized for testing"
+                }
+              ]
+            },
+            {
+              "name": "Masscan",
+              "type": "Tool",
+              "description": "High-speed port scanner capable of scanning entire IP ranges rapidly.",
+              "tags": ["scanner","network"],
+              "children": [
+                {
+                  "name": "masscan 0.0.0.0/0 -p80,443 --rate 1000",
+                  "type": "Command",
+                  "command": "masscan 0.0.0.0/0 -p80,443 --rate 1000"
+                },
+                {
+                  "name": "masscan -iL targets.txt -oX results.xml",
+                  "type": "Command",
+                  "command": "masscan -iL targets.txt -oX results.xml"
+                },
+                {
+                  "name": "# Limit rate and scope to approved networks",
+                  "type": "Command",
+                  "command": "# Limit rate and scope to approved networks"
+                }
+              ]
+            },
+            {
+          "name":"Amass",
+          "type":"Tool",
+          "description":"Subdomain enumeration and DNS asset mapping suite.",
+          "tags":["dns","osint"],
           "children":[
-            /* Tools (5 total for Red Team) */
-            {
-              "name":"nmap",
-              "type":"Tool",
-              "description":"Network exploration and port scanning utility (learning use: inventory & defense).",
-              "tags":["network","scan","recon"],
-              "children":[
-                {"name":"nmap -sC -sV -oA scan 127.0.0.1/24","type":"Command","command":"nmap -sC -sV -oA scan 127.0.0.1/24"},
-                {"name":"nmap -Pn -p 1-65535 -T4 192.0.2.1","type":"Command","command":"nmap -Pn -p 1-65535 -T4 192.0.2.1"},
-                {"name":"nmap --script vuln 198.51.100.0/24","type":"Command","command":"nmap --script vuln 198.51.100.0/24"}
-              ]
-            },
-            {
-              "name":"masscan",
-              "type":"Tool",
-              "description":"Fast Internet-scale port scanner (use in lab/authorized environments).",
-              "tags":["scan","large-scale"],
-              "children":[
-                {"name":"masscan 127.0.0.1/24 -p22,80,443 --rate=1000","type":"Command","command":"masscan 127.0.0.1/24 -p22,80,443 --rate=1000"},
-                {"name":"masscan 198.51.100.0/24 -p1-65535 --rate=500","type":"Command","command":"masscan 198.51.100.0/24 -p1-65535 --rate=500"},
-                {"name":"masscan --help","type":"Command","command":"masscan --help"}
-              ]
-            },
-            {
-              "name":"nikto",
-              "type":"Tool",
-              "description":"Web server scanner for known issues (educational scanning of own sites).",
-              "tags":["web","scanner"],
-              "children":[
-                {"name":"nikto -h https://example.com -o nikto_report.txt","type":"Command","command":"nikto -h https://example.com -o nikto_report.txt"},
-                {"name":"nikto -h 127.0.0.1 -Tuning x  -Display V","type":"Command","command":"nikto -h 127.0.0.1 -Tuning x  -Display V"},
-                {"name":"nikto -list-plugins","type":"Command","command":"nikto -list-plugins"}
-              ]
-            },
-            {
-              "name":"metasploit",
-              "type":"Tool",
-              "description":"Framework for authorized security testing and research (use in controlled labs).",
-              "tags":["exploit-framework"],
-              "children":[
-                {"name":"msfconsole -q","type":"Command","command":"msfconsole -q"},
-                {"name":"use exploit/multi/handler","type":"Command","command":"use exploit/multi/handler"},
-                {"name":"set PAYLOAD windows/meterpreter/reverse_tcp","type":"Command","command":"set PAYLOAD windows/meterpreter/reverse_tcp"}
-              ]
-            },
-            {
-              "name":"ncat",
-              "type":"Tool",
-              "description":"Netcat alternative for reading/writing network connections (debugging & lab use).",
-              "tags":["network","utility"],
-              "children":[
-                {"name":"ncat -l 8080 --sh-exec 'echo hello'","type":"Command","command":"ncat -l 8080 --sh-exec 'echo hello'"},
-                {"name":"ncat 127.0.0.1 8080","type":"Command","command":"ncat 127.0.0.1 8080"},
-                {"name":"ncat --help","type":"Command","command":"ncat --help"}
-              ]
-            }
+            {"name":"amass enum -d example.com -o subdomains.txt","type":"Command","command":"amass enum -d example.com -o subdomains.txt"},
+            {"name":"amass viz -d3 -o graph.html","type":"Command","command":"amass viz -d3 -o graph.html"},
+            {"name":"# Combine with WHOIS data ethically","type":"Command","command":"# Combine with WHOIS data ethically"}
           ]
         },
         {
-          "name":"Social Engineering",
-          "type":"Task",
-          "description":"Human-focused testing such as phishing simulations and awareness campaigns (ethical authorization required).",
+          "name":"Subfinder",
+          "type":"Tool",
+          "description":"Fast passive subdomain enumeration via public sources.",
+          "tags":["osint","dns"],
           "children":[
-            {
-              "name":"setuptools",
-              "type":"Tool",
-              "description":"(Placeholder) tools and scripts used to craft awareness simulations (use responsibly).",
-              "tags":["social","awareness"],
-              "children":[
-                {"name":"# Simulation framework - refer to policies","type":"Command","command":"# Use approved frameworks and policies"},
-                {"name":"echo 'Run simulations in lab'","type":"Command","command":"echo 'Run simulations in lab'"},
-                {"name":"# See company policy prior to phishing simulations","type":"Command","command":"# See company policy prior to phishing simulations"}
-              ]
-            },
-            {
-              "name":"gophish",
-              "type":"Tool",
-              "description":"Phishing simulation platform for awareness training in authorized contexts.",
-              "tags":["phishing","awareness"],
-              "children":[
-                {"name":"./gophish -config config.json","type":"Command","command":"./gophish -config config.json"},
-                {"name":"# Use only in consented campaigns","type":"Command","command":"# Use only in consented campaigns"},
-                {"name":"curl http://127.0.0.1:3333","type":"Command","command":"curl http://127.0.0.1:3333"}
-              ]
-            },
-            {
-              "name":"social-engineer-toolkit",
-              "type":"Tool",
-              "description":"Toolkit for social tests; for defenders: study techniques to improve awareness (lab use only).",
-              "tags":["social"],
-              "children":[
-                {"name":"setoolkit","type":"Command","command":"setoolkit"},
-                {"name":"# Inspect toolkit documentation","type":"Command","command":"# Inspect toolkit documentation"},
-                {"name":"setoolkit --help","type":"Command","command":"setoolkit --help"}
-              ]
-            }
+            {"name":"subfinder -d example.com -o subs.txt","type":"Command","command":"subfinder -d example.com -o subs.txt"},
+            {"name":"cat subs.txt | httprobe","type":"Command","command":"cat subs.txt | httprobe"},
+            {"name":"# Do not target production without consent","type":"Command","command":"# Do not target production without consent"}
+          ]
+        },
+        {
+          "name":"Censys",
+          "type":"Tool",
+          "description":"Internet-wide scanning and search engine for recon intelligence.",
+          "tags":["intel","recon"],
+          "children":[
+            {"name":"censys search 'services.service_name:HTTP'","type":"Command","command":"censys search 'services.service_name:HTTP'"},
+            {"name":"# Requires API key for large queries","type":"Command","command":"# Requires API key for large queries"},
+            {"name":"censys view <fingerprint>","type":"Command","command":"censys view <fingerprint>"}
+          ]
+        },
+        {
+          "name":"Shodan CLI",
+          "type":"Tool",
+          "description":"Search engine for Internet-connected devices; useful for recon of exposed assets.",
+          "tags":["osint","recon"],
+          "children":[
+            {"name":"shodan search apache country:IN","type":"Command","command":"shodan search apache country:IN"},
+            {"name":"shodan download results.json.gz 'nginx port:443'","type":"Command","command":"shodan download results.json.gz 'nginx port:443'"},
+            {"name":"# Use for awareness, not exploitation","type":"Command","command":"# Use for awareness, not exploitation"}
+          ]
+        },
+        {
+          "name":"Recon-ng",
+          "type":"Tool",
+          "description":"Web-based recon framework with modules for hosts, contacts, and domains.",
+          "tags":["framework","recon"],
+          "children":[
+            {"name":"recon-ng","type":"Command","command":"recon-ng"},
+            {"name":"add domains example.com","type":"Command","command":"add domains example.com"},
+            {"name":"run","type":"Command","command":"run"},
+            {"name":"# Follow site policies during scanning","type":"Command","command":"# Follow site policies during scanning"}
+          ]
+        },
+        {
+          "name":"theHarvester",
+          "type":"Tool",
+          "description":"Collect emails, subdomains, and hosts from public sources.",
+          "tags":["osint"],
+          "children":[
+            {"name":"theHarvester -d example.com -b all","type":"Command","command":"theHarvester -d example.com -b all"},
+            {"name":"# Combine with manual verification","type":"Command","command":"# Combine with manual verification"},
+            {"name":"theHarvester -d example.com -b google -f report.html","type":"Command","command":"theHarvester -d example.com -b google -f report.html"}
+          ]
+        },
+        {
+          "name":"FOCA",
+          "type":"Tool",
+          "description":"Metadata extraction tool from public documents.",
+          "tags":["metadata","osint"],
+          "children":[
+            {"name":"Upload documents to FOCA GUI","type":"Command","command":"# Use GUI to extract metadata from docs"},
+            {"name":"# Identify internal usernames, paths, versions","type":"Command","command":"# Identify internal usernames, paths, versions"}
+          ]
+        },
+        {
+          "name":"SpiderFoot",
+          "type":"Tool",
+          "description":"Automated OSINT collection and correlation platform.",
+          "tags":["osint","automation"],
+          "children":[
+            {"name":"spiderfoot -s example.com -m ALL -o spider.html","type":"Command","command":"spiderfoot -s example.com -m ALL -o spider.html"},
+            {"name":"# Use self-hosted instance for privacy","type":"Command","command":"# Use self-hosted instance for privacy"}
           ]
         }
       ]
     },
 
-    /* --------------------- ROLE: Blue Team --------------------- */
+    /* ========== Task 2: OSINT Intelligence Gathering ========== */
     {
-      "name": "Blue Team",
-      "type": "Role",
-      "description": "Defensive security team responsible for detection, response and resilience.",
-      "tags":["defense","monitoring"],
+      "name": "OSINT Intelligence Gathering",
+      "type": "Task",
+      "description": "Collect, correlate, and analyze public information to build intelligence profiles.",
       "children": [
         {
-          "name":"Incident Response",
-          "type":"Task",
-          "description":"Responding to and investigating security incidents.",
-          "children":[
-            {
-              "name":"volatility",
-              "type":"Tool",
-              "description":"Memory forensics framework for analyzing RAM captures (educational).",
-              "tags":["forensics","memory"],
-              "children":[
-                {"name":"volatility -f memdump.raw --profile=Win7SP1x64 pstree","type":"Command","command":"volatility -f memdump.raw --profile=Win7SP1x64 pstree"},
-                {"name":"volatility -f memdump.vmem imageinfo","type":"Command","command":"volatility -f memdump.vmem imageinfo"},
-                {"name":"volatility -f mem.raw --profile=Linux pslist","type":"Command","command":"volatility -f mem.raw --profile=Linux pslist"}
-              ]
-            },
-            {
-              "name":"sleuthkit",
-              "type":"Tool",
-              "description":"File system forensics utilities (analyze disk images in controlled labs).",
-              "tags":["forensics","disk"],
-              "children":[
-                {"name":"fls -r disk.img","type":"Command","command":"fls -r disk.img"},
-                {"name":"icat disk.img 12345 > extracted.txt","type":"Command","command":"icat disk.img 12345 > extracted.txt"},
-                {"name":"mmls disk.img","type":"Command","command":"mmls disk.img"}
-              ]
-            },
-            {
-              "name":"autopsy",
-              "type":"Tool",
-              "description":"Graphical forensics platform to analyze disk images and artifacts.",
-              "tags":["forensics","gui"],
-              "children":[
-                {"name":"autopsy &","type":"Command","command":"autopsy &"},
-                {"name":"autopsy -h","type":"Command","command":"autopsy -h"},
-                {"name":"# Use with forensic copies of evidence","type":"Command","command":"# Use with forensic copies of evidence"}
-              ]
-            },
-            {
-              "name":"sleuthkit-duo",
-              "type":"Tool",
-              "description":"(Auxiliary) additional disk analysis helpers (learning only).",
-              "tags":["forensics"],
-              "children":[
-                {"name":"tsk_recover disk.img recovered/","type":"Command","command":"tsk_recover disk.img recovered/"},
-                {"name":"fsstat disk.img","type":"Command","command":"fsstat disk.img"},
-                {"name":"istat disk.img 1024","type":"Command","command":"istat disk.img 1024"}
-              ]
-            },
-            {
-              "name":"yara",
-              "type":"Tool",
-              "description":"Pattern-matching tool for malware research and detection (use signatures responsibly).",
-              "tags":["detection","malware"],
-              "children":[
-                {"name":"yara -r rules.yar sample.bin","type":"Command","command":"yara -r rules.yar sample.bin"},
-                {"name":"yara --help","type":"Command","command":"yara --help"},
-                {"name":"yara -s rules.yar sample.bin","type":"Command","command":"yara -s rules.yar sample.bin"}
-              ]
-            }
+          "name": "Maltego",
+          "type": "Tool",
+          "description": "Graph-based data mining tool for link analysis and OSINT correlation.",
+          "tags": ["osint","analysis"],
+          "children": [
+            {"name":"maltego &","type":"Command","command":"maltego &"},
+            {"name":"# Run transforms for domains and persons","type":"Command","command":"# Run transforms for domains and persons"},
+            {"name":"# Visualize network relationships","type":"Command","command":"# Visualize network relationships"}
           ]
         },
         {
-          "name":"Hunt & Monitoring",
-          "type":"Task",
-          "description":"Proactive threat hunting and continuous monitoring.",
-          "children":[
-            {
-              "name":"splunk",
-              "type":"Tool",
-              "description":"Log aggregation and SIEM solution (configure and query logs for detection).",
-              "tags":["siem","logs"],
-              "children":[
-                {"name":"index=_internal | stats count by sourcetype","type":"Command","command":"index=_internal | stats count by sourcetype"},
-                {"name":"search index=main error | head 50","type":"Command","command":"search index=main error | head 50"},
-                {"name":"splunk btool inputs list","type":"Command","command":"splunk btool inputs list"}
-              ]
-            },
-            {
-              "name":"osquery",
-              "type":"Tool",
-              "description":"Endpoint visibility via SQL-based queries — great for inventory and detection.",
-              "tags":["endpoint","visibility"],
-              "children":[
-                {"name":"SELECT name,uid FROM users;","type":"Command","command":"SELECT name,uid FROM users;"},
-                {"name":"osqueryi --json 'SELECT * FROM processes'","type":"Command","command":"osqueryi --json 'SELECT * FROM processes'"},
-                {"name":"osqueryctl start","type":"Command","command":"osqueryctl start"}
-              ]
-            },
-            {
-              "name":"sysmon",
-              "type":"Tool",
-              "description":"Windows event logging for enhanced telemetry (use to harden detection).",
-              "tags":["telemetry"],
-              "children":[
-                {"name":"sysmon -i sysmonconfig.xml","type":"Command","command":"sysmon -i sysmonconfig.xml"},
-                {"name":"# Check event viewer for Sysmon events","type":"Command","command":"# Check event viewer for Sysmon events"},
-                {"name":"sysmon -c","type":"Command","command":"sysmon -c"}
-              ]
-            },
-            {
-              "name":"zeek",
-              "type":"Tool",
-              "description":"Network analysis framework for extracting metadata and detecting anomalies.",
-              "tags":["network","analysis"],
-              "children":[
-                {"name":"zeek -i eth0 local","type":"Command","command":"zeek -i eth0 local"},
-                {"name":"zeekctl deploy","type":"Command","command":"zeekctl deploy"},
-                {"name":"zeek --help","type":"Command","command":"zeek --help"}
-              ]
-            },
-            {
-              "name":"suricata",
-              "type":"Tool",
-              "description":"High-performance network IDS/IPS for detecting suspicious traffic (defensive use).",
-              "tags":["ids","network"],
-              "children":[
-                {"name":"suricata -c /etc/suricata/suricata.yaml -i eth0","type":"Command","command":"suricata -c /etc/suricata/suricata.yaml -i eth0"},
-                {"name":"suricata-update --show-sources","type":"Command","command":"suricata-update --show-sources"},
-                {"name":"suricata --help","type":"Command","command":"suricata --help"}
-              ]
-            }
+          "name": "SpiderFoot HX",
+          "type": "Tool",
+          "description": "Enterprise OSINT automation for large-scale intelligence gathering.",
+          "tags": ["osint","automation"],
+          "children": [
+            {"name":"spiderfoot --list-modules","type":"Command","command":"spiderfoot --list-modules"},
+            {"name":"spiderfoot -s company.com -m sfp_shodan,sfp_whois","type":"Command","command":"spiderfoot -s company.com -m sfp_shodan,sfp_whois"},
+            {"name":"# Review collected data ethically","type":"Command","command":"# Review collected data ethically"}
+          ]
+        },
+        {
+          "name": "Creepy",
+          "type": "Tool",
+          "description": "Geolocation OSINT tool to correlate public posts with coordinates.",
+          "tags": ["osint","geo"],
+          "children": [
+            {"name":"creepy","type":"Command","command":"creepy"},
+            {"name":"# Load Twitter and Flickr modules","type":"Command","command":"# Load Twitter and Flickr modules"},
+            {"name":"# Only use for training or research","type":"Command","command":"# Only use for training or research"}
+          ]
+        },
+        {
+          "name": "ExifTool",
+          "type": "Tool",
+          "description": "Extract metadata from image and document files.",
+          "tags": ["metadata","analysis"],
+          "children": [
+            {"name":"exiftool *.jpg","type":"Command","command":"exiftool *.jpg"},
+            {"name":"# Identify device info or GPS tags","type":"Command","command":"# Identify device info or GPS tags"}
+          ]
+        },
+        {
+          "name": "Gitrob",
+          "type": "Tool",
+          "description": "Analyze GitHub repositories for sensitive data exposure.",
+          "tags": ["git","osint"],
+          "children": [
+            {"name":"gitrob analyze org_name","type":"Command","command":"gitrob analyze org_name"},
+            {"name":"# Focus on authorized org repos","type":"Command","command":"# Focus on authorized org repos"}
           ]
         }
       ]
     },
+
+    /* ========== Task 3: Enumeration ========== */
+    {
+      "name": "Enumeration",
+      "type": "Task",
+      "description": "Actively gather detailed information about discovered hosts and services.",
+      "children": [
+        {
+          "name": "Enum4linux",
+          "type": "Tool",
+          "description": "Enumerate Windows shares, users, and policies via SMB.",
+          "tags": ["windows","enumeration"],
+          "children": [
+            {"name":"enum4linux -a 192.168.1.10","type":"Command","command":"enum4linux -a 192.168.1.10"},
+            {"name":"# Identify shared folders or users","type":"Command","command":"# Identify shared folders or users"}
+          ]
+        },
+        {
+          "name": "SNMPwalk",
+          "type": "Tool",
+          "description": "Enumerate SNMP objects on a network device.",
+          "tags": ["snmp","network"],
+          "children": [
+            {"name":"snmpwalk -v2c -c public 192.168.1.1","type":"Command","command":"snmpwalk -v2c -c public 192.168.1.1"},
+            {"name":"# Review only authorized device OIDs","type":"Command","command":"# Review only authorized device OIDs"}
+          ]
+        },
+        {
+          "name": "Nikto",
+          "type": "Tool",
+          "description": "Web server scanner identifying outdated or vulnerable components.",
+          "tags": ["web","scanner"],
+          "children": [
+            {"name":"nikto -h https://example.com","type":"Command","command":"nikto -h https://example.com"},
+            {"name":"nikto -ssl -Tuning x","type":"Command","command":"nikto -ssl -Tuning x"},
+            {"name":"# Non-intrusive scans only","type":"Command","command":"# Non-intrusive scans only"}
+          ]
+        },
+        {
+          "name": "LDAPsearch",
+          "type": "Tool",
+          "description": "Query LDAP directories for information about users and groups.",
+          "tags": ["ldap","windows"],
+          "children": [
+            {"name":"ldapsearch -x -H ldap://target -b 'dc=example,dc=com'","type":"Command","command":"ldapsearch -x -H ldap://target -b 'dc=example,dc=com'"},
+            {"name":"# Requires proper creds for legal testing","type":"Command","command":"# Requires proper creds for legal testing"}
+          ]
+        }
+      ]
+    },
+
+    /* ========== Task 4: Scanning and Fingerprinting ========== */
+    {
+      "name": "Scanning and Fingerprinting",
+      "type": "Task",
+      "description": "Identify open services, OS types, and potential vulnerabilities.",
+      "children": [
+        {
+          "name": "Nmap NSE Scripts",
+          "type": "Tool",
+          "description": "Use Nmap Scripting Engine to detect common vulnerabilities.",
+          "tags": ["scanner"],
+          "children": [
+            {"name":"nmap --script banner,vuln -p80,443 host","type":"Command","command":"nmap --script banner,vuln -p80,443 host"},
+            {"name":"# Review script outputs manually","type":"Command","command":"# Review script outputs manually"}
+          ]
+        },
+        {
+          "name": "WhatWeb",
+          "type": "Tool",
+          "description": "Identify web technologies and CMS versions.",
+          "tags": ["web","fingerprint"],
+          "children": [
+            {"name":"whatweb https://example.com","type":"Command","command":"whatweb https://example.com"},
+            {"name":"whatweb --aggression 1 -v target.com","type":"Command","command":"whatweb --aggression 1 -v target.com"},
+            {"name":"# Keep aggression low on live sites","type":"Command","command":"# Keep aggression low on live sites"}
+          ]
+        },
+        {
+          "name": "Wappalyzer CLI",
+          "type": "Tool",
+          "description": "Detect frameworks and platforms used on websites.",
+          "tags": ["fingerprint","web"],
+          "children": [
+            {"name":"wappalyzer https://target.com","type":"Command","command":"wappalyzer https://target.com"},
+            {"name":"# Use for technology stack mapping","type":"Command","command":"# Use for technology stack mapping"}
+          ]
+        }
+      ]
+    },
+
+    /* ========== Task 5: Web Enumeration ========== */
+    {
+      "name": "Web Enumeration",
+      "type": "Task",
+      "description": "Discover hidden directories, files, and endpoints on web servers.",
+      "children": [
+        {
+          "name": "Dirb",
+          "type": "Tool",
+          "description": "Simple web content scanner using wordlists.",
+          "tags": ["web","enumeration"],
+          "children": [
+            {"name":"dirb https://example.com /usr/share/wordlists/common.txt","type":"Command","command":"dirb https://example.com /usr/share/wordlists/common.txt"},
+            {"name":"# Do not brute-force unauthorized hosts","type":"Command","command":"# Do not brute-force unauthorized hosts"}
+          ]
+        },
+        {
+          "name": "Gobuster",
+          "type": "Tool",
+          "description": "Directory and DNS brute-forcer written in Go.",
+          "tags": ["web","dns"],
+          "children": [
+            {"name":"gobuster dir -u https://example.com -w wordlist.txt","type":"Command","command":"gobuster dir -u https://example.com -w wordlist.txt"},
+            {"name":"gobuster dns -d example.com -w subdomains.txt","type":"Command","command":"gobuster dns -d example.com -w subdomains.txt"},
+            {"name":"# Adjust thread count responsibly","type":"Command","command":"# Adjust thread count responsibly"}
+          ]
+        },
+        {
+          "name": "Feroxbuster",
+          "type": "Tool",
+          "description": "Recursive web content discovery tool for pentesters.",
+          "tags": ["web","enumeration"],
+          "children": [
+            {"name":"feroxbuster -u https://example.com -w /usr/share/wordlists/dir.txt","type":"Command","command":"feroxbuster -u https://example.com -w /usr/share/wordlists/dir.txt"},
+            {"name":"feroxbuster --depth 2 --threads 20","type":"Command","command":"feroxbuster --depth 2 --threads 20"},
+            {"name":"# Limit recursion to avoid load","type":"Command","command":"# Limit recursion to avoid load"}
+          ]
+        },
+        {
+          "name": "FFUF",
+          "type": "Tool",
+          "description": "Fast web fuzzer for directories, parameters, and VHost discovery.",
+          "tags": ["web","fuzzer"],
+          "children": [
+            {"name":"ffuf -u https://example.com/FUZZ -w wordlist.txt","type":"Command","command":"ffuf -u https://example.com/FUZZ -w wordlist.txt"},
+            {"name":"ffuf -u https://example.com -H 'Host: FUZZ.example.com' -w subs.txt","type":"Command","command":"ffuf -u https://example.com -H 'Host: FUZZ.example.com' -w subs.txt"},
+            {"name":"# Respect rate limits","type":"Command","command":"# Respect rate limits"}
+          ]
+        }
+      ]
+    }
+
+  ]
+},
+
 
     /* --------------------- ROLE: Purple Team --------------------- */
     {
@@ -1212,7 +1324,369 @@ const DATA = {
           ]
         }
       ]
-    }
+    },
+
+
+
+    /* --------------------- ROLE: AI Security --------------------- */
+    {
+      "name": "AI Security",
+      "type": "Role",
+      "description": "Protecting AI/ML systems from data poisoning, model theft, and prompt injection attacks.",
+      "tags": ["ai", "ml", "security"],
+      "children": [
+        {
+          "name": "Model Hardening",
+          "type": "Task",
+          "description": "Analyze ML models for vulnerabilities and strengthen model pipelines.",
+          "children": [
+            {
+              "name": "IBM Adversarial Robustness Toolbox",
+              "type": "Tool",
+              "description": "Framework for evaluating ML model robustness against adversarial attacks.",
+              "tags": ["ml", "robustness"],
+              "children": [
+                {"name": "pip install adversarial-robustness-toolbox","type":"Command","command":"pip install adversarial-robustness-toolbox"},
+                {"name": "python art_example.py","type":"Command","command":"python art_example.py"},
+                {"name": "# Evaluate model defenses against perturbations","type":"Command","command":"# Evaluate model defenses against perturbations"}
+              ]
+            },
+            {
+              "name": "Foolbox",
+              "type": "Tool",
+              "description": "Python toolkit to create adversarial examples and test AI robustness.",
+              "tags": ["ml", "testing"],
+              "children": [
+                {"name":"pip install foolbox","type":"Command","command":"pip install foolbox"},
+                {"name":"python foolbox_attack.py","type":"Command","command":"python foolbox_attack.py"},
+                {"name":"# Test image classifiers for robustness","type":"Command","command":"# Test image classifiers for robustness"}
+              ]
+            },
+            {
+              "name": "SecML",
+              "type": "Tool",
+              "description": "Machine learning security library for adversarial research (academic use only).",
+              "tags":["adversarial","research"],
+              "children":[
+                {"name":"pip install secml","type":"Command","command":"pip install secml"},
+                {"name":"python examples/adversarial_attack.py","type":"Command","command":"python examples/adversarial_attack.py"},
+                {"name":"# Use only on local or authorized data","type":"Command","command":"# Use only on local or authorized data"}
+              ]
+            },
+            {
+              "name": "OpenAI Evals",
+              "type": "Tool",
+              "description": "Framework for evaluating AI model performance, safety, and reliability.",
+              "tags":["evaluation","openai"],
+              "children":[
+                {"name":"pip install evals","type":"Command","command":"pip install evals"},
+                {"name":"oaievals run evals.elsuite.basic","type":"Command","command":"oaievals run evals.elsuite.basic"},
+                {"name":"# Customize evals for prompt safety","type":"Command","command":"# Customize evals for prompt safety"}
+              ]
+            },
+            {
+              "name": "ModelGuard",
+              "type": "Tool",
+              "description": "Prototype framework for monitoring AI model input/output for malicious activity.",
+              "tags":["ai","monitoring"],
+              "children":[
+                {"name":"modelguard monitor --source app.log","type":"Command","command":"modelguard monitor --source app.log"},
+                {"name":"# Detect abnormal inference patterns","type":"Command","command":"# Detect abnormal inference patterns"},
+                {"name":"modelguard --help","type":"Command","command":"modelguard --help"}
+              ]
+            }
+          ]
+        }
+      ]
+    },
+
+    /* --------------------- ROLE: DevSecOps --------------------- */
+    {
+      "name": "DevSecOps",
+      "type": "Role",
+      "description": "Integrating security across CI/CD pipelines for continuous assurance.",
+      "tags": ["devops","ci-cd"],
+      "children": [
+        {
+          "name":"Pipeline Security",
+          "type":"Task",
+          "description":"Automate code, dependency, and container scanning during builds.",
+          "children":[
+            {
+              "name":"Trivy",
+              "type":"Tool",
+              "description":"Comprehensive vulnerability scanner for containers and IaC.",
+              "tags":["container","scanner"],
+              "children":[
+                {"name":"trivy image nginx:latest","type":"Command","command":"trivy image nginx:latest"},
+                {"name":"trivy fs .","type":"Command","command":"trivy fs ."},
+                {"name":"# Integrate into CI workflows","type":"Command","command":"# Integrate into CI workflows"}
+              ]
+            },
+            {
+              "name":"Grype",
+              "type":"Tool",
+              "description":"Vulnerability scanner for container images and filesystems.",
+              "tags":["scanner","container"],
+              "children":[
+                {"name":"grype alpine:3.12","type":"Command","command":"grype alpine:3.12"},
+                {"name":"grype dir:./project","type":"Command","command":"grype dir:./project"},
+                {"name":"grype --help","type":"Command","command":"grype --help"}
+              ]
+            },
+            {
+              "name":"Checkov",
+              "type":"Tool",
+              "description":"IaC scanner for Terraform, Kubernetes, and CloudFormation templates.",
+              "tags":["iac","scanner"],
+              "children":[
+                {"name":"checkov -d .","type":"Command","command":"checkov -d ."},
+                {"name":"checkov --download-policy","type":"Command","command":"checkov --download-policy"},
+                {"name":"# Embed into CI/CD","type":"Command","command":"# Embed into CI/CD"}
+              ]
+            },
+            {
+              "name":"Snyk",
+              "type":"Tool",
+              "description":"Developer-first tool for dependency and container vulnerability scanning.",
+              "tags":["dependency","scanner"],
+              "children":[
+                {"name":"snyk test","type":"Command","command":"snyk test"},
+                {"name":"snyk monitor","type":"Command","command":"snyk monitor"},
+                {"name":"# Authenticate with your developer account","type":"Command","command":"# Authenticate with your developer account"}
+              ]
+            },
+            {
+              "name":"GitHub Advanced Security",
+              "type":"Tool",
+              "description":"GitHub native code scanning, secret detection, and dependency analysis.",
+              "tags":["github","ci-cd"],
+              "children":[
+                {"name":"gh code-scanning alert list","type":"Command","command":"gh code-scanning alert list"},
+                {"name":"# View results in GitHub Security tab","type":"Command","command":"# View results in GitHub Security tab"},
+                {"name":"gh secret list","type":"Command","command":"gh secret list"}
+              ]
+            }
+          ]
+        }
+      ]
+    },
+
+    /* --------------------- ROLE: IoT Security --------------------- */
+    {
+      "name": "IoT Security",
+      "type": "Role",
+      "description": "Securing Internet of Things devices and embedded systems.",
+      "tags": ["iot","embedded"],
+      "children": [
+        {
+          "name":"Device Assessment",
+          "type":"Task",
+          "description":"Evaluate IoT firmware and network interfaces for vulnerabilities.",
+          "children":[
+            {
+              "name":"Binwalk",
+              "type":"Tool",
+              "description":"Firmware analysis tool for extracting and inspecting embedded images.",
+              "tags":["firmware","analysis"],
+              "children":[
+                {"name":"binwalk firmware.bin","type":"Command","command":"binwalk firmware.bin"},
+                {"name":"binwalk -e firmware.bin","type":"Command","command":"binwalk -e firmware.bin"},
+                {"name":"# Use on lab firmware images only","type":"Command","command":"# Use on lab firmware images only"}
+              ]
+            },
+            {
+              "name":"Firmware Mod Kit",
+              "type":"Tool",
+              "description":"Tool suite for unpacking and repacking firmware images.",
+              "tags":["firmware"],
+              "children":[
+                {"name":"./extract-firmware.sh firmware.bin","type":"Command","command":"./extract-firmware.sh firmware.bin"},
+                {"name":"# Modify config files carefully","type":"Command","command":"# Modify config files carefully"},
+                {"name":"./repack-firmware.sh","type":"Command","command":"./repack-firmware.sh"}
+              ]
+            },
+            {
+              "name":"Ghidra",
+              "type":"Tool",
+              "description":"NSA’s open-source reverse engineering suite for binary analysis.",
+              "tags":["re","analysis"],
+              "children":[
+                {"name":"ghidraRun","type":"Command","command":"ghidraRun"},
+                {"name":"# Load firmware binaries for static analysis","type":"Command","command":"# Load firmware binaries for static analysis"},
+                {"name":"ghidra --help","type":"Command","command":"ghidra --help"}
+              ]
+            },
+            {
+              "name":"Serial Monitor",
+              "type":"Tool",
+              "description":"Utility for observing UART/serial communications on IoT devices.",
+              "tags":["serial","debug"],
+              "children":[
+                {"name":"screen /dev/ttyUSB0 115200","type":"Command","command":"screen /dev/ttyUSB0 115200"},
+                {"name":"minicom -D /dev/ttyUSB0","type":"Command","command":"minicom -D /dev/ttyUSB0"},
+                {"name":"# Use read-only mode for observation","type":"Command","command":"# Use read-only mode for observation"}
+              ]
+            },
+            {
+              "name":"Shodan IoT Watch",
+              "type":"Tool",
+              "description":"Track IoT exposure trends via public search API (defensive awareness).",
+              "tags":["iot","intel"],
+              "children":[
+                {"name":"shodan search 'webcamxp' --limit 5","type":"Command","command":"shodan search 'webcamxp' --limit 5"},
+                {"name":"# Research device fingerprints ethically","type":"Command","command":"# Research device fingerprints ethically"},
+                {"name":"shodan stats --facets country:iot","type":"Command","command":"shodan stats --facets country:iot"}
+              ]
+            }
+          ]
+        }
+      ]
+    },
+
+    /* --------------------- ROLE: Threat Hunting Automation --------------------- */
+    {
+      "name":"Threat Hunting Automation",
+      "type":"Role",
+      "description":"Automating threat-hunting workflows and investigation playbooks.",
+      "tags":["automation","threathunt"],
+      "children":[
+        {
+          "name":"Playbook Automation",
+          "type":"Task",
+          "description":"Use SOAR and automation tools to speed up incident detection.",
+          "children":[
+            {
+              "name":"TheHive",
+              "type":"Tool",
+              "description":"Open-source incident response platform with case automation.",
+              "tags":["soar","ir"],
+              "children":[
+                {"name":"curl http://localhost:9000/api/status","type":"Command","command":"curl http://localhost:9000/api/status"},
+                {"name":"# Integrate with Cortex analyzers","type":"Command","command":"# Integrate with Cortex analyzers"},
+                {"name":"hive-cli cases list","type":"Command","command":"hive-cli cases list"}
+              ]
+            },
+            {
+              "name":"Cortex",
+              "type":"Tool",
+              "description":"Analyzer engine for automation and enrichment tasks in SOC workflows.",
+              "tags":["automation","ir"],
+              "children":[
+                {"name":"python cortex_cli.py analyzers","type":"Command","command":"python cortex_cli.py analyzers"},
+                {"name":"# Combine with TheHive for full SOAR use","type":"Command","command":"# Combine with TheHive for full SOAR use"},
+                {"name":"curl http://localhost:9001/api/analyzers","type":"Command","command":"curl http://localhost:9001/api/analyzers"}
+              ]
+            },
+            {
+              "name":"Shuffle",
+              "type":"Tool",
+              "description":"No-code SOAR workflow platform for building automation pipelines.",
+              "tags":["soar","automation"],
+              "children":[
+                {"name":"shuffle app list","type":"Command","command":"shuffle app list"},
+                {"name":"# Automate enrichment tasks","type":"Command","command":"# Automate enrichment tasks"},
+                {"name":"shuffle run workflow.json","type":"Command","command":"shuffle run workflow.json"}
+              ]
+            },
+            {
+              "name":"StackStorm",
+              "type":"Tool",
+              "description":"Event-driven automation platform for security orchestration.",
+              "tags":["automation","devops"],
+              "children":[
+                {"name":"st2 run core.local cmd='echo hi'","type":"Command","command":"st2 run core.local cmd='echo hi'"},
+                {"name":"st2 action list","type":"Command","command":"st2 action list"},
+                {"name":"# Integrate playbooks with alerting pipelines","type":"Command","command":"# Integrate playbooks with alerting pipelines"}
+              ]
+            },
+            {
+              "name":"Ansible Security Automation",
+              "type":"Tool",
+              "description":"Automates repetitive security tasks like policy enforcement and remediation.",
+              "tags":["automation","ansible"],
+              "children":[
+                {"name":"ansible-playbook secure.yml","type":"Command","command":"ansible-playbook secure.yml"},
+                {"name":"ansible-inventory --list","type":"Command","command":"ansible-inventory --list"},
+                {"name":"# Use read-only checks for verification","type":"Command","command":"# Use read-only checks for verification"}
+              ]
+            }
+          ]
+        }
+      ]
+    },
+
+    /* --------------------- ROLE: Malware Analysis --------------------- */
+    {
+      "name":"Malware Analysis",
+      "type":"Role",
+      "description":"Analyze and reverse-engineer malicious software samples safely.",
+      "tags":["malware","analysis"],
+      "children":[
+        {
+          "name":"Static and Dynamic Analysis",
+          "type":"Task",
+          "description":"Disassemble, debug, and observe malware behavior in isolated environments.",
+          "children":[
+            {
+              "name":"Ghidra",
+              "type":"Tool",
+              "description":"Reverse engineering suite for disassembling and analyzing binaries.",
+              "tags":["re"],
+              "children":[
+                {"name":"ghidraRun","type":"Command","command":"ghidraRun"},
+                {"name":"# Load malicious samples in sandbox only","type":"Command","command":"# Load malicious samples in sandbox only"},
+                {"name":"ghidra --help","type":"Command","command":"ghidra --help"}
+              ]
+            },
+            {
+              "name":"PEStudio",
+              "type":"Tool",
+              "description":"Analyze Windows PE files for indicators without executing them.",
+              "tags":["static","windows"],
+              "children":[
+                {"name":"pestudio sample.exe","type":"Command","command":"pestudio sample.exe"},
+                {"name":"# Review imports and suspicious sections","type":"Command","command":"# Review imports and suspicious sections"},
+                {"name":"pestudio --help","type":"Command","command":"pestudio --help"}
+              ]
+            },
+            {
+              "name":"Procmon",
+              "type":"Tool",
+              "description":"Monitor real-time file, registry, and process activity (Windows).",
+              "tags":["dynamic","monitor"],
+              "children":[
+                {"name":"procmon64.exe","type":"Command","command":"procmon64.exe"},
+                {"name":"# Use filters for process behavior tracking","type":"Command","command":"# Use filters for process behavior tracking"},
+                {"name":"procmon64.exe /Quiet","type":"Command","command":"procmon64.exe /Quiet"}
+              ]
+            },
+            {
+              "name":"CAPEv2",
+              "type":"Tool",
+              "description":"Malware sandbox for analyzing executable behavior in VMs.",
+              "tags":["sandbox","automation"],
+              "children":[
+                {"name":"cape submit sample.exe","type":"Command","command":"cape submit sample.exe"},
+                {"name":"cape tasks list","type":"Command","command":"cape tasks list"},
+                {"name":"# Use isolated VM networks only","type":"Command","command":"# Use isolated VM networks only"}
+              ]
+            },
+            {
+              "name":"YARA-Rules",
+              "type":"Tool",
+              "description":"Advanced YARA ruleset repository for malware detection.",
+              "tags":["detection"],
+              "children":[
+                {"name":"yara -r rules/ sample/","type":"Command","command":"yara -r rules/ sample/"},
+                {"name":"# Maintain custom detection libraries","type":"Command","command":"# Maintain custom detection libraries"},
+                {"name":"yara compile rules/","type":"Command","command":"yara compile rules/"}
+              ]
+            }
+          ]
+        }
+      ]
+    },
 
   ] /* end root children */
 };
@@ -1805,3 +2279,4 @@ showDetails(root);
 </script>
 </body>
 </html>
+

@@ -1295,77 +1295,244 @@ const DATA = {
       ]
     },
 
-    /* --------------------- ROLE: Penetration Tester --------------------- */
+/* --------------------- ROLE: Penetration Tester --------------------- */
+{
+  "name": "Penetration Tester",
+  "type": "Role",
+  "description": "Authorized professionals who perform security assessments on networks, applications, and infrastructure to identify and mitigate vulnerabilities.",
+  "tags": ["offense", "redteam", "testing"],
+  "children": [
     {
-      "name":"Penetration Tester",
-      "type":"Role",
-      "description":"Specialists who perform authorized, scoped security testing.",
-      "tags":["offense","testing"],
-      "children":[
+      "name": "Web Application Testing",
+      "type": "Event",
+      "description": "Discovering web-based vulnerabilities using proxy interception, injection, and crawling.",
+      "children": [
         {
-          "name":"Web App Testing",
-          "type":"Task",
-          "description":"Testing web applications for common security flaws within authorization scopes.",
-          "children":[
+          "name": "Burp Suite",
+          "type": "Tool",
+          "description": "Intercept and manipulate HTTP/S traffic for web app testing (authorized use only).",
+          "tags": ["proxy", "scanner"],
+          "children": [
             {
-              "name":"burp-suite",
-              "type":"Tool",
-              "description":"Proxy-based web testing platform with many analysis features (education only).",
-              "tags":["web","proxy"],
-              "children":[
-                {"name":"burp &","type":"Command","command":"burp &"},
-                {"name":"# Configure proxy in browser to 127.0.0.1:8080","type":"Command","command":"# Configure proxy in browser to 127.0.0.1:8080"},
-                {"name":"burp --help","type":"Command","command":"burp --help"}
-              ]
+              "name": "burpsuite",
+              "type": "Command",
+              "command": "burpsuite &",
+              "use_info": "Launches the Burp Suite GUI for intercepting and analyzing web traffic."
             },
             {
-              "name":"sqlmap",
-              "type":"Tool",
-              "description":"Automated SQL injection discovery tool (only within authorized test scopes).",
-              "tags":["web","vuln"],
-              "children":[
-                {"name":"sqlmap -u 'http://localhost/test?id=1' --batch --level=2","type":"Command","command":"sqlmap -u 'http://localhost/test?id=1' --batch --level=2"},
-                {"name":"sqlmap --help","type":"Command","command":"sqlmap --help"},
-                {"name":"sqlmap -r request.txt --batch","type":"Command","command":"sqlmap -r request.txt --batch"}
-              ]
+              "name": "burp --collaborator-server",
+              "type": "Command",
+              "command": "burp --collaborator-server",
+              "use_info": "Starts Burp Collaborator to detect blind SSRF and DNS exfiltration."
             },
             {
-              "name":"owasp-zap",
-              "type":"Tool",
-              "description":"OWASP ZAP - open-source web app scanner and proxy useful for security testing and learning.",
-              "tags":["web","scanner"],
-              "children":[
-                {"name":"zap.sh -daemon -port 8090","type":"Command","command":"zap.sh -daemon -port 8090"},
-                {"name":"zap-cli -p 8090 status","type":"Command","command":"zap-cli -p 8090 status"},
-                {"name":"# Run passive scanning in test environment","type":"Command","command":"# Run passive scanning in test environment"}
-              ]
+              "name": "# Configure proxy 127.0.0.1:8080",
+              "type": "Command",
+              "command": "# Configure browser proxy for interception.",
+              "use_info": "Allows interception of live HTTP/S traffic via Burp Proxy."
+            }
+          ]
+        },
+        {
+          "name": "OWASP ZAP",
+          "type": "Tool",
+          "description": "Open-source DAST scanner for discovering OWASP Top 10 issues.",
+          "tags": ["scanner", "proxy"],
+          "children": [
+            {
+              "name": "zap.sh -daemon -port 8081",
+              "type": "Command",
+              "command": "zap.sh -daemon -port 8081",
+              "use_info": "Runs ZAP in daemon mode for automation or API-based scans."
             },
             {
-              "name":"gobuster",
-              "type":"Tool",
-              "description":"Directory and DNS brute-force tool useful for mapping assets (use responsibly).",
-              "tags":["recon","web"],
-              "children":[
-                {"name":"gobuster dir -u https://example.com -w wordlist.txt","type":"Command","command":"gobuster dir -u https://example.com -w wordlist.txt"},
-                {"name":"gobuster dns -d example.com -w subdomains.txt","type":"Command","command":"gobuster dns -d example.com -w subdomains.txt"},
-                {"name":"gobuster --help","type":"Command","command":"gobuster --help"}
-              ]
+              "name": "zap-cli -p 8081 quick-scan https://target.com",
+              "type": "Command",
+              "command": "zap-cli -p 8081 quick-scan https://target.com",
+              "use_info": "Performs a quick scan using ZAP’s CLI interface."
             },
             {
-              "name":"dirb",
-              "type":"Tool",
-              "description":"Simple web content scanner for directory discovery (educational usage only).",
-              "tags":["web","recon"],
-              "children":[
-                {"name":"dirb https://example.com /usr/share/wordlists/dirb/common.txt","type":"Command","command":"dirb https://example.com /usr/share/wordlists/dirb/common.txt"},
-                {"name":"dirb --help","type":"Command","command":"dirb --help"},
-                {"name":"# Only scan within scope","type":"Command","command":"# Only scan within scope"}
-              ]
+              "name": "zap-cli report -o report.html -f html",
+              "type": "Command",
+              "command": "zap-cli report -o report.html -f html",
+              "use_info": "Generates a formatted HTML vulnerability report."
+            }
+          ]
+        },
+        {
+          "name": "sqlmap",
+          "type": "Tool",
+          "description": "Automates SQL injection testing and exploitation (authorized use only).",
+          "tags": ["web", "injection"],
+          "children": [
+            {
+              "name": "sqlmap -u 'https://target.com/item?id=1' --batch",
+              "type": "Command",
+              "command": "sqlmap -u 'https://target.com/item?id=1' --batch",
+              "use_info": "Tests parameterized URL for SQL injection vulnerabilities."
+            },
+            {
+              "name": "sqlmap -r request.txt --dbs",
+              "type": "Command",
+              "command": "sqlmap -r request.txt --dbs",
+              "use_info": "Enumerates available databases using a captured HTTP request."
+            },
+            {
+              "name": "sqlmap --tamper=between,space2comment",
+              "type": "Command",
+              "command": "sqlmap --tamper=between,space2comment",
+              "use_info": "Bypasses WAFs by obfuscating payloads."
+            }
+          ]
+        },
+        {
+          "name": "gobuster",
+          "type": "Tool",
+          "description": "Fast directory and DNS brute-forcing utility.",
+          "tags": ["recon", "web"],
+          "children": [
+            {
+              "name": "gobuster dir -u https://target.com -w /usr/share/wordlists/common.txt",
+              "type": "Command",
+              "command": "gobuster dir -u https://target.com -w /usr/share/wordlists/common.txt",
+              "use_info": "Discovers hidden directories or files on a web server."
+            },
+            {
+              "name": "gobuster dns -d target.com -w subdomains.txt",
+              "type": "Command",
+              "command": "gobuster dns -d target.com -w subdomains.txt",
+              "use_info": "Enumerates possible subdomains using brute-force."
+            },
+            {
+              "name": "gobuster fuzz -u https://target.com/FUZZ -w fuzzlist.txt",
+              "type": "Command",
+              "command": "gobuster fuzz -u https://target.com/FUZZ -w fuzzlist.txt",
+              "use_info": "Fuzzes endpoints for input validation testing."
             }
           ]
         }
       ]
     },
+    {
+      "name": "Network Penetration",
+      "type": "Event",
+      "description": "Assessing internal and external networks for exploitable weaknesses.",
+      "children": [
+        {
+          "name": "nmap",
+          "type": "Tool",
+          "description": "Network scanning and service fingerprinting tool.",
+          "tags": ["scanner", "network"],
+          "children": [
+            {
+              "name": "nmap -sS -Pn -p- target.com",
+              "type": "Command",
+              "command": "nmap -sS -Pn -p- target.com",
+              "use_info": "Performs full TCP SYN scan of all ports."
+            },
+            {
+              "name": "nmap -A -T4 192.168.1.0/24",
+              "type": "Command",
+              "command": "nmap -A -T4 192.168.1.0/24",
+              "use_info": "Performs aggressive scan with OS and version detection."
+            },
+            {
+              "name": "nmap --script vuln target.com",
+              "type": "Command",
+              "command": "nmap --script vuln target.com",
+              "use_info": "Runs Nmap’s vulnerability NSE scripts for quick checks."
+            }
+          ]
+        },
+        {
+          "name": "masscan",
+          "type": "Tool",
+          "description": "High-speed network scanner for large IP ranges.",
+          "tags": ["scanner", "speed"],
+          "children": [
+            {
+              "name": "masscan 0.0.0.0/0 -p80,443 --rate 10000",
+              "type": "Command",
+              "command": "masscan 0.0.0.0/0 -p80,443 --rate 10000",
+              "use_info": "Scans the entire Internet for open ports (use only in lab)."
+            },
+            {
+              "name": "masscan 10.0.0.0/8 -p22,445 --rate 1000",
+              "type": "Command",
+              "command": "masscan 10.0.0.0/8 -p22,445 --rate 1000",
+              "use_info": "Performs targeted internal network scans."
+            },
+            {
+              "name": "masscan --resume paused.scan",
+              "type": "Command",
+              "command": "masscan --resume paused.scan",
+              "use_info": "Resumes interrupted scanning sessions."
+            }
+          ]
+        },
+        {
+          "name": "netcat",
+          "type": "Tool",
+          "description": "Swiss-army knife for network testing and reverse shells.",
+          "tags": ["network", "utility"],
+          "children": [
+            {
+              "name": "nc -lvnp 4444",
+              "type": "Command",
+              "command": "nc -lvnp 4444",
+              "use_info": "Listens for incoming reverse shell connections."
+            },
+            {
+              "name": "nc target.com 80",
+              "type": "Command",
+              "command": "nc target.com 80",
+              "use_info": "Tests open connectivity to a remote port."
+            },
+            {
+              "name": "nc -zv target.com 1-1024",
+              "type": "Command",
+              "command": "nc -zv target.com 1-1024",
+              "use_info": "Performs simple TCP port scanning."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Privilege Escalation & Exploitation",
+      "type": "Event",
+      "description": "Testing privilege escalation vectors on compromised systems.",
+      "children": [
+        {
+          "name": "linpeas",
+          "type": "Tool",
+          "description": "Linux privilege escalation enumeration script.",
+          "tags": ["linux", "priv-esc"],
+          "children": [
+            {
+              "name": "wget https://github.com/carlospolop/PEASS-ng/releases/latest/download/linpeas.sh",
+              "type": "Command",
+              "command": "wget https://github.com/carlospolop/PEASS-ng/releases/latest/download/linpeas.sh",
+              "use_info": "Downloads the latest linpeas script."
+            },
+            {
+              "name": "chmod +x linpeas.sh && ./linpeas.sh",
+              "type": "Command",
+              "command": "chmod +x linpeas.sh && ./linpeas.sh",
+              "use_info": "Executes linpeas for privilege escalation checks."
+            },
+            {
+              "name": "# Review privilege escalation paths manually",
+              "type": "Command",
+              "command": "# Review privilege escalation paths manually",
+              "use_info": "Check for sudo misconfigurations and writable binaries."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+},
 
     /* --------------------- ROLE: Application Security --------------------- */
     {
